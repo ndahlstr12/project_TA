@@ -1,0 +1,23 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
+class Guru extends Model
+{
+    use HasFactory;
+
+    protected $fillable = [
+        'nip',
+        'nama',
+        'gelar',
+        'spesialisasi'
+    ];
+
+    public function user()
+    {
+        return $this->hasOne(User::class, 'guru_id');
+    }
+}

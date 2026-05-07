@@ -12,12 +12,18 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name',
+        'username',
         'email',
         'password',
         'role',
         'siswa_id',
         'guru_id'
     ];
+
+    public function passwordResetRequests()
+    {
+        return $this->hasMany(PasswordResetRequest::class);
+    }
 
     protected $hidden = [
         'password',

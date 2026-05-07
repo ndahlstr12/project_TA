@@ -4,6 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use App\Models\Guru;
+use App\Models\Siswa;
+use App\Models\PasswordResetRequest;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
@@ -12,150 +18,66 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-    public function showRegister()
-    {
-        return view('auth.register');
-    }
-
-    public function register(Request $request)
-    {
-        $rules = [
-            'role' => ['required', 'in:siswa,guru'],
-            'name' => ['required', 'string', 'max:255'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ];
-
-        if ($request->role === 'siswa') {
-            $rules['id_number'] = ['required', 'string', 'min:10']; // NISN
-        } else {
-            $rules['id_number'] = ['required', 'string', 'min:8']; // NIP
-        }
-
-        $validated = $request->validate($rules);
-
-        \Illuminate\Support\Facades\DB::beginTransaction();
-        try {
-            $siswaId = null;
-            $guruId = null;
-
-            if ($validated['role'] === 'siswa') {
-                // Logika Siswa (Cari/Buat Profil)
-                $siswa = \App\Models\Siswa::where('nisn', $validated['id_number'])->first();
-                if (!$siswa) {
-                    $siswa = \App\Models\Siswa::create([
-                        'nisn' => $validated['id_number'],
-                        'nama' => $validated['name'],
-                        'kelas' => 'Belum Ditentukan',
-                        'jenis_kelamin' => 'L',
-                    ]);
-                }
-                $siswaId = $siswa->id;
-                
-                // Cek apakah sudah ada akun
-                if (\App\Models\User::where('siswa_id', $siswaId)->where('role', 'siswa')->exists()) {
-                    return back()->withErrors(['id_number' => 'Akun dengan NISN ini sudah terdaftar.'])->withInput();
-                }
-            } else {
-                // Logika Guru (NIP WAJIB sudah didaftarkan Admin di Master Data)
-                $guru = \App\Models\Guru::where('nip', $validated['id_number'])->first();
-                if (!$guru) {
-                    return back()->withErrors(['id_number' => 'NIP Anda belum terdaftar di sistem. Silakan hubungi Admin.'])->withInput();
-                }
-                $guruId = $guru->id;
-
-                // Cek apakah sudah ada akun
-                if (\App\Models\User::where('guru_id', $guruId)->exists()) {
-                    return back()->withErrors(['id_number' => 'Akun dengan NIP ini sudah terdaftar.'])->withInput();
-                }
-            }
-
-            // Buat akun User
-            $user = \App\Models\User::create([
-                'name' => $validated['name'],
-                'email' => null,
-                'password' => \Illuminate\Support\Facades\Hash::make($validated['password']),
-                'role' => $validated['role'],
-                'siswa_id' => $siswaId,
-                'guru_id' => $guruId,
-            ]);
-
-            \Illuminate\Support\Facades\DB::commit();
-            \Illuminate\Support\Facades\Auth::login($user);
-
-            // Redirect sesuai role
-            if ($user->role === 'siswa') {
-                return redirect()->route('siswa.dashboard')->with('success', 'Selamat datang!');
-            }
-            return redirect()->route('guru.dashboard')->with('success', 'Selamat datang, Bapak/Ibu Guru.');
-
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\DB::rollBack();
-            return back()->withErrors(['id_number' => 'Terjadi kesalahan: ' . $e->getMessage()])->withInput();
-        }
-    }
-
     public function login(Request $request)
     {
         $loginInput = $request->input('login'); 
         $password = $request->input('password');
+        $remember = $request->has('remember');
 
-        // 1. Coba Login sebagai Admin (via Email)
+        // 1. Unified Login via Username (stores NISN/NIP/Email)
+        if (Auth::attempt(['username' => $loginInput, 'password' => $password], $remember)) {
+            return $this->authenticated($request, Auth::user());
+        }
+
+        // 2. Admin Login via Email
         if (filter_var($loginInput, FILTER_VALIDATE_EMAIL)) {
-            if (Auth::attempt(['email' => $loginInput, 'password' => $password])) {
+            if (Auth::attempt(['email' => $loginInput, 'password' => $password], $remember)) {
                 return $this->authenticated($request, Auth::user());
             }
         }
 
-        // 2. Coba Login sebagai Guru (via NIP)
-        // Kita cari di tabel gurus dulu berdasarkan NIP
-        $guru = \App\Models\Guru::where('nip', $loginInput)->first();
+        // 3. School Pattern: Guru (NIP)
+        $guru = Guru::where('nip', $loginInput)->first();
         if ($guru) {
-            // Jika data guru ada, cari user yang terhubung ke guru_id tersebut
-            $userGuru = \App\Models\User::where('guru_id', $guru->id)->first();
-            
-            // Jika user ditemukan, cek passwordnya secara manual
-            if ($userGuru && \Illuminate\Support\Facades\Hash::check($password, $userGuru->password)) {
-                Auth::login($userGuru);
-                return $this->authenticated($request, $userGuru);
+            $user = User::where('guru_id', $guru->id)->first();
+            if ($user && Hash::check($password, $user->password)) {
+                Auth::login($user, $remember);
+                return $this->authenticated($request, $user);
             }
         }
 
-        // 3. Coba Login sebagai Siswa / Orang Tua (via NISN)
-        $siswa = \App\Models\Siswa::where('nisn', $loginInput)->first();
+        // 4. School Pattern: Siswa (NISN) & Orang Tua (NISN.ortu)
+        $isOrtu = str_ends_with($loginInput, '.ortu');
+        $searchId = $isOrtu ? explode('.', $loginInput)[0] : $loginInput;
+
+        $siswa = Siswa::where('nisn', $searchId)->first();
         if ($siswa) {
-            // Cari semua user yang terhubung ke siswa ini (bisa Siswa itu sendiri atau Orang Tuanya)
-            $users = \App\Models\User::where('siswa_id', $siswa->id)->get();
+            $role = $isOrtu ? 'orangtua' : 'siswa';
+            $user = User::where('siswa_id', $siswa->id)->where('role', $role)->first();
             
-            foreach ($users as $u) {
-                if (\Illuminate\Support\Facades\Hash::check($password, $u->password)) {
-                    Auth::login($u);
-                    return $this->authenticated($request, $u);
-                }
+            if ($user && Hash::check($password, $user->password)) {
+                Auth::login($user, $remember);
+                return $this->authenticated($request, $user);
             }
         }
 
         return back()->withErrors([
-            'login' => 'Login gagal. Silakan periksa kembali ID (NIP/NISN) dan Password Anda.',
+            'login' => 'Kredensial yang Anda masukkan salah.',
         ])->onlyInput('login');
     }
 
     protected function authenticated(Request $request, $user)
     {
         $request->session()->regenerate();
+        $routes = [
+            'admin' => 'admin/dashboard',
+            'guru' => 'teacher/dashboard',
+            'walikelas' => 'class-teacher/dashboard',
+            'siswa' => 'student/dashboard',
+            'orangtua' => 'parent/dashboard',
+        ];
 
-        if ($user->role === 'admin') {
-            return redirect()->intended('admin/dashboard');
-        } elseif ($user->role === 'guru') {
-            return redirect()->intended('teacher/dashboard');
-        } elseif ($user->role === 'walikelas') {
-            return redirect()->intended('class-teacher/dashboard');
-        } elseif ($user->role === 'siswa') {
-            return redirect()->intended('student/dashboard');
-        } elseif ($user->role === 'orangtua') {
-            return redirect()->intended('parent/dashboard');
-        }
-
-        return redirect()->intended('/');
+        return redirect()->intended($routes[$user->role] ?? '/');
     }
 
     public function logout(Request $request)
@@ -164,5 +86,32 @@ class AuthController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
         return redirect('/');
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        $request->validate(['username' => 'required']);
+        $user = User::where('username', $request->username)
+            ->orWhere('email', $request->username)
+            ->first();
+
+        // Fallback search by NIP/NISN if username not found
+        if (!$user) {
+            $guru = Guru::where('nip', $request->username)->first();
+            if ($guru) $user = User::where('guru_id', $guru->id)->first();
+        }
+        if (!$user) {
+            $siswa = Siswa::where('nisn', $request->username)->first();
+            if ($siswa) $user = User::where('siswa_id', $siswa->id)->first();
+        }
+
+        if ($user) {
+            PasswordResetRequest::updateOrCreate(
+                ['user_id' => $user->id, 'status' => 'pending']
+            );
+            return back()->with('success', 'Permintaan reset telah dikirim ke Admin.');
+        }
+
+        return back()->withErrors(['username' => 'ID Pengguna tidak ditemukan.']);
     }
 }

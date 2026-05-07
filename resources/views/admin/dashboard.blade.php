@@ -4,6 +4,13 @@
 @section('page_title', 'Dashboard')
 
 @section('content')
+<!-- Quick Action Bar -->
+<div class="mb-8 flex flex-wrap gap-4">
+    <a href="{{ route('admin.reports.index') }}" class="bg-indigo-600 text-white px-6 py-3 rounded-2xl font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition flex items-center">
+        <i class="fas fa-chart-pie mr-2"></i> Lihat Laporan Sekolah
+    </a>
+</div>
+
 <!-- Welcome Section -->
 <div class="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-4">
     <div>

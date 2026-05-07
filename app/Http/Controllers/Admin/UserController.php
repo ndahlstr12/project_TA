@@ -12,11 +12,29 @@ use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::latest()->paginate(10);
-        return view('admin.users.index', compact('users'));
+        $role = $request->query('role');
+        $query = User::query();
+
+        if ($role) {
+            if ($role === 'guru') {
+                $query->whereIn('role', ['guru', 'walikelas']);
+            } else {
+                $query->where('role', $role);
+            }
+        }
+
+        $users = $query->latest()->paginate(10)->withQueryString();
+        $activeTab = $role ?: 'all';
+
+        return view('admin.users.index', compact('users', 'activeTab'));
     }
+
+    // Remove old separate index methods
+    public function indexGuru() { return redirect()->route('admin.users.index', ['role' => 'guru']); }
+    public function indexSiswa() { return redirect()->route('admin.users.index', ['role' => 'siswa']); }
+    public function indexOrangTua() { return redirect()->route('admin.users.index', ['role' => 'orangtua']); }
 
     public function create()
     {

@@ -26,14 +26,15 @@ class NotificationController extends Controller
         $request = \App\Models\PasswordResetRequest::findOrFail($id);
         $user = $request->user;
         
-        // Reset password to default or something recognizable
-        // The user said: "masuk nya dengan nama dan password"
-        // Maybe reset to 'password' or their name
-        $user->update(['password' => \Illuminate\Support\Facades\Hash::make('password123')]);
+        // Reset password menjadi username (NISN/NIP) sesuai permintaan
+        // Jika username kosong (misal admin), gunakan email atau default password123
+        $newPassword = $user->username ?? ($user->email ?? 'password123');
+        
+        $user->update(['password' => \Illuminate\Support\Facades\Hash::make($newPassword)]);
         
         $request->update(['status' => 'resolved']);
 
-        return back()->with('success', 'Password user ' . $user->name . ' telah direset menjadi: password123');
+        return back()->with('success', 'Password user ' . $user->name . ' telah direset menjadi: ' . $newPassword);
     }
 
     public function sendRaport($siswaId)

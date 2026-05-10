@@ -1,76 +1,124 @@
 @extends('layouts.admin')
 
 @section('title', 'Data Siswa')
-@section('page_title', 'Master Data')
+@section('page_title', 'Registrasi Siswa')
 
 @section('content')
-<div class="max-w-7xl mx-auto">
-    <div class="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+<div class="space-y-10">
+    
+    <!-- Soft Header -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-            <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight">Data Siswa</h2>
-            <p class="text-slate-500 font-medium italic">Manajemen data akademik siswa SMKN 1 Sungailiat.</p>
+            <h1 class="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Registrasi Siswa</h1>
+            <p class="text-sm text-slate-400 font-medium mt-1">Kelola data akademik dan identitas siswa seluruh angkatan.</p>
         </div>
-        <a href="{{ route('admin.siswas.create') }}" class="inline-flex items-center justify-center space-x-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-2xl shadow-lg shadow-indigo-200 transition-all active:scale-95">
-            <i class="fas fa-user-plus"></i>
-            <span>Tambah Siswa</span>
-        </a>
+        <div class="flex gap-3">
+            <button class="px-5 py-3 bg-white dark:bg-surface-800 text-slate-600 dark:text-slate-300 text-[11px] font-bold rounded-2xl shadow-sm border border-slate-100 dark:border-white/5 uppercase tracking-widest flex items-center gap-2">
+                <i data-lucide="download-cloud" class="w-4 h-4"></i>
+                Export
+            </button>
+            <a href="{{ route('admin.siswas.create') }}" class="px-6 py-3 bg-accent-600 text-white text-[11px] font-bold rounded-2xl shadow-xl shadow-accent-500/20 uppercase tracking-widest flex items-center gap-2 hover:bg-accent-700 transition-all">
+                <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                Tambah Siswa
+            </a>
+        </div>
     </div>
 
-    @if(session('success'))
-    <div class="bg-emerald-50 border-l-4 border-emerald-500 text-emerald-700 p-4 rounded-xl mb-6 flex items-center shadow-sm animate-fade-in">
-        <i class="fas fa-check-circle mr-3"></i>
-        <span class="font-medium">{{ session('success') }}</span>
-    </div>
-    @endif
-
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        @forelse($siswas as $siswa)
-        <div class="bg-white rounded-3xl border border-slate-100 shadow-xl shadow-slate-200/50 overflow-hidden group hover:-translate-y-1 transition-all duration-300">
-            <div class="p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="w-14 h-14 bg-indigo-50 rounded-2xl flex items-center justify-center text-indigo-600 text-xl font-bold">
-                        <i class="fas fa-user-graduate"></i>
-                    </div>
-                    <span class="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-[10px] font-extrabold uppercase tracking-widest">
-                        {{ $siswa->kelas }}
-                    </span>
-                </div>
-                <h4 class="text-lg font-bold text-slate-800 truncate">{{ $siswa->nama }}</h4>
-                <p class="text-sm text-slate-400 font-medium mb-6">NISN: <span class="text-slate-600">{{ $siswa->nisn }}</span></p>
-                
-                <div class="flex items-center justify-between pt-4 border-t border-slate-50">
-                    <div class="flex space-x-2">
-                        <span class="text-[10px] font-bold py-1 px-2 rounded-lg {{ $siswa->jenis_kelamin == 'L' ? 'bg-blue-50 text-blue-600' : 'bg-pink-50 text-pink-600' }}">
-                            {{ $siswa->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan' }}
-                        </span>
-                    </div>
-                    <div class="flex items-center space-x-3">
-                        <a href="{{ route('admin.siswas.edit', $siswa->id) }}" class="text-slate-400 hover:text-indigo-600 transition">
-                            <i class="far fa-edit"></i>
-                        </a>
-                        <form action="{{ route('admin.siswas.destroy', $siswa->id) }}" method="POST" onsubmit="return confirm('Hapus data siswa ini?')">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="text-slate-400 hover:text-red-500 transition">
-                                <i class="far fa-trash-alt"></i>
-                            </button>
-                        </form>
-                    </div>
-                </div>
+    <!-- Data Surface -->
+    <div class="card-soft overflow-hidden">
+        <!-- Control Bar -->
+        <div class="p-6 border-b border-slate-50 dark:border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div class="relative group w-full md:w-96">
+                <i data-lucide="search" class="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-accent-500 transition-colors"></i>
+                <input type="text" placeholder="Cari NISN atau nama..." 
+                    class="w-full pl-12 pr-6 py-3 bg-slate-50 dark:bg-white/5 border border-transparent rounded-2xl text-xs font-semibold focus:bg-white dark:focus:bg-surface-900 focus:border-accent-500 outline-none transition-all">
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <select class="px-4 py-3 bg-slate-50 dark:bg-white/5 border border-transparent rounded-2xl text-xs font-bold focus:bg-white outline-none transition-all">
+                    <option>Semua Tingkat</option>
+                    <option>Kelas X</option>
+                    <option>Kelas XI</option>
+                    <option>Kelas XII</option>
+                </select>
+                <button class="p-3 bg-slate-50 dark:bg-white/5 rounded-2xl text-slate-400 hover:text-accent-500 transition-colors">
+                    <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+                </button>
             </div>
         </div>
-        @empty
-        <div class="col-span-full bg-white p-12 rounded-[2rem] border-2 border-dashed border-slate-200 text-center">
-            <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300 text-3xl">
-                <i class="fas fa-users-slash"></i>
-            </div>
-            <h3 class="text-lg font-bold text-slate-800">Belum ada data siswa</h3>
-            <p class="text-slate-400 mt-1">Silakan tambah data siswa untuk mulai menggunakan sistem.</p>
-        </div>
-        @endforelse
-    </div>
 
-    <div class="mt-8">
-        {{ $siswas->links() }}
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">
+                        <th class="px-8 py-6">Profil Siswa</th>
+                        <th class="px-8 py-6">Tingkatan</th>
+                        <th class="px-8 py-6">Gender</th>
+                        <th class="px-8 py-6 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50 dark:divide-white/5">
+                    @forelse($siswas as $siswa)
+                    <tr class="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-all group">
+                        <td class="px-8 py-6">
+                            <div class="flex items-center gap-4">
+                                <div class="w-12 h-12 rounded-2xl bg-accent-50 dark:bg-accent-600/10 flex items-center justify-center text-accent-600 border border-accent-100 dark:border-accent-600/20">
+                                    <i data-lucide="user" class="w-6 h-6"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-bold text-slate-800 dark:text-slate-100 leading-tight">{{ $siswa->nama }}</p>
+                                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1.5">NISN: {{ $siswa->nisn }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-8 py-6">
+                            <span class="px-3 py-1.5 bg-slate-100 dark:bg-white/5 rounded-xl text-[9px] font-black text-slate-500 uppercase tracking-tighter">{{ $siswa->kelas }}</span>
+                        </td>
+                        <td class="px-8 py-6">
+                            <div class="flex items-center gap-2">
+                                <div class="w-1.5 h-1.5 rounded-full {{ $siswa->jenis_kelamin == 'L' ? 'bg-blue-400' : 'bg-rose-400' }}"></div>
+                                <span class="text-xs font-bold text-slate-600 dark:text-slate-400">
+                                    {{ $siswa->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan' }}
+                                </span>
+                            </div>
+                        </td>
+                        <td class="px-8 py-6 text-right">
+                            <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
+                                <a href="{{ route('admin.siswas.edit', $siswa->id) }}" class="p-2.5 bg-white dark:bg-surface-800 rounded-xl text-slate-400 hover:text-accent-600 shadow-sm border border-slate-100 dark:border-white/5 transition-all">
+                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                </a>
+                                <form action="{{ route('admin.siswas.destroy', $siswa->id) }}" method="POST" onsubmit="return confirm('Arsipkan data ini?')" class="inline">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="p-2.5 bg-white dark:bg-surface-800 rounded-xl text-slate-400 hover:text-rose-500 shadow-sm border border-slate-100 dark:border-white/5 transition-all">
+                                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="4" class="px-8 py-24 text-center">
+                            <div class="flex flex-col items-center gap-4">
+                                <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center text-slate-200">
+                                    <i data-lucide="database-zap" class="w-10 h-10"></i>
+                                </div>
+                                <p class="text-xs font-bold text-slate-300 uppercase tracking-widest">Tidak ada data ditemukan</p>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Footer -->
+        <div class="p-8 border-t border-slate-50 dark:border-white/5 flex flex-col md:flex-row md:items-center justify-between gap-6 bg-slate-50/30 dark:bg-white/5">
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Entitas &bull; {{ $siswas->total() }} Siswa Terdaftar</p>
+            <div class="pagination-soft">
+                {{ $siswas->links() }}
+            </div>
+        </div>
     </div>
 </div>
 @endsection

@@ -24,19 +24,18 @@ class AuthController extends Controller
         $password = $request->input('password');
         $remember = $request->has('remember');
 
-        // 1. Unified Login via Username (stores NISN/NIP/Email)
-        if (Auth::attempt(['username' => $loginInput, 'password' => $password], $remember)) {
-            return $this->authenticated($request, Auth::user());
+        // 1. Cek di tabel User (Admin, Guru, Siswa yang sudah punya akun)
+        // Mengecek apakah input cocok dengan email ATAU username
+        $user = User::where('email', $loginInput)
+                    ->orWhere('username', $loginInput)
+                    ->first();
+
+        if ($user && Hash::check($password, $user->password)) {
+            Auth::login($user, $remember);
+            return $this->authenticated($request, $user);
         }
 
-        // 2. Admin Login via Email
-        if (filter_var($loginInput, FILTER_VALIDATE_EMAIL)) {
-            if (Auth::attempt(['email' => $loginInput, 'password' => $password], $remember)) {
-                return $this->authenticated($request, Auth::user());
-            }
-        }
-
-        // 3. School Pattern: Guru (NIP)
+        // 2. Pattern Sekolah: Guru (NIP) - Jika belum login via langkah 1
         $guru = Guru::where('nip', $loginInput)->first();
         if ($guru) {
             $user = User::where('guru_id', $guru->id)->first();
@@ -91,27 +90,82 @@ class AuthController extends Controller
     public function forgotPassword(Request $request)
     {
         $request->validate(['username' => 'required']);
-        $user = User::where('username', $request->username)
-            ->orWhere('email', $request->username)
+        
+        $loginInput = $request->username;
+
+        // Cari user berdasarkan username, email, atau cek ke tabel guru/siswa
+        $user = User::where('username', $loginInput)
+            ->orWhere('email', $loginInput)
             ->first();
 
-        // Fallback search by NIP/NISN if username not found
+        // Fallback: Jika tidak ditemukan di tabel User, coba cari di tabel Guru/Siswa
         if (!$user) {
-            $guru = Guru::where('nip', $request->username)->first();
+            $guru = Guru::where('nip', $loginInput)->first();
             if ($guru) $user = User::where('guru_id', $guru->id)->first();
         }
         if (!$user) {
-            $siswa = Siswa::where('nisn', $request->username)->first();
+            $siswa = Siswa::where('nisn', $loginInput)->first();
             if ($siswa) $user = User::where('siswa_id', $siswa->id)->first();
         }
 
         if ($user) {
+            // Catat ke tabel riwayat reset dengan status 'pending' agar admin yang memproses
             PasswordResetRequest::updateOrCreate(
-                ['user_id' => $user->id, 'status' => 'pending']
+                ['user_id' => $user->id],
+                ['status' => 'pending']
             );
-            return back()->with('success', 'Permintaan reset telah dikirim ke Admin.');
+
+            return back()->with('success', 'Permintaan reset kata sandi telah dikirim ke Admin. Silakan hubungi admin sekolah untuk memproses permintaan Anda.');
         }
 
-        return back()->withErrors(['username' => 'ID Pengguna tidak ditemukan.']);
+        return back()->withErrors(['username' => 'ID Pengguna (NISN/NIP) tidak terdaftar di sistem.']);
+    }
+
+    public function showRegister()
+    {
+        return view('auth.register');
+    }
+
+    public function register(Request $request)
+    {
+        $request->validate([
+            'role' => 'required|in:siswa,guru',
+            'id_number' => 'required',
+            'name' => 'required|string|max:255',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        $role = $request->role;
+        $idNumber = $request->id_number;
+        $userData = [
+            'name' => $request->name,
+            'password' => Hash::make($request->password),
+            'role' => $role,
+            'username' => $idNumber,
+        ];
+
+        if ($role === 'siswa') {
+            $siswa = Siswa::where('nisn', $idNumber)->first();
+            if (!$siswa) {
+                return back()->withErrors(['id_number' => 'NISN tidak terdaftar di sistem.'])->withInput();
+            }
+            if (User::where('siswa_id', $siswa->id)->where('role', 'siswa')->exists()) {
+                return back()->withErrors(['id_number' => 'Akun untuk NISN ini sudah terdaftar.'])->withInput();
+            }
+            $userData['siswa_id'] = $siswa->id;
+        } else {
+            $guru = Guru::where('nip', $idNumber)->first();
+            if (!$guru) {
+                return back()->withErrors(['id_number' => 'NIP tidak terdaftar di sistem.'])->withInput();
+            }
+            if (User::where('guru_id', $guru->id)->exists()) {
+                return back()->withErrors(['id_number' => 'Akun untuk NIP ini sudah terdaftar.'])->withInput();
+            }
+            $userData['guru_id'] = $guru->id;
+        }
+
+        User::create($userData);
+
+        return redirect()->route('login')->with('success', 'Registrasi berhasil! Silakan masuk.');
     }
 }

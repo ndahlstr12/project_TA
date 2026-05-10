@@ -1,193 +1,584 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | E-Raport SMKN 1 Sungailiat</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .login-gradient {
-            background: radial-gradient(circle at top left, #4f46e5, #4338ca);
-        }
-        .animate-subtle {
-            animation: floating 4s ease-in-out infinite;
-        }
-        @keyframes floating {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-        .input-focus-ring:focus {
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
-        }
-        .animate-shake {
-            animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
-        }
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>E-Raport SMKN 1 Sungailiat</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Merriweather:wght@700&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --navy: #1a2c5b;
+      --navy-deep: #0f1d3d;
+      --gold: #e8a020;
+      --gold-light: #f5c55a;
+      --cream: #fdf8f0;
+      --gray-soft: #f0f2f7;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      background: var(--gray-soft);
+      overflow: hidden;
+    }
+
+    /* ── LEFT PANEL ── */
+    .left-panel {
+      width: 42%;
+      min-height: 100vh;
+      background: linear-gradient(150deg, var(--navy-deep) 0%, var(--navy) 60%, #2a4080 100%);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 2.5rem;
+      overflow: hidden;
+    }
+    .left-panel::before {
+      content: '';
+      position: absolute;
+      width: 480px; height: 480px;
+      border-radius: 50%;
+      border: 2px solid rgba(232,160,32,.15);
+      top: -120px; left: -120px;
+    }
+    .left-panel::after {
+      content: '';
+      position: absolute;
+      width: 300px; height: 300px;
+      border-radius: 50%;
+      border: 2px solid rgba(232,160,32,.1);
+      bottom: -80px; right: -80px;
+    }
+    .dot-grid {
+      position: absolute; inset: 0;
+      background-image: radial-gradient(rgba(255,255,255,.06) 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+    .gold-bar {
+      width: 56px; height: 4px;
+      background: linear-gradient(90deg, var(--gold), var(--gold-light));
+      border-radius: 2px; margin-bottom: 1.5rem;
+    }
+    .logo-box {
+      width: 120px; height: 120px;
+      border-radius: 20px;
+      background: rgba(255,255,255,.08);
+      border: 2px dashed rgba(255,255,255,.25);
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 2rem;
+      backdrop-filter: blur(6px);
+      position: relative; z-index: 1;
+      transition: transform .3s;
+    }
+    .logo-box:hover { transform: scale(1.05); }
+    .logo-box svg { opacity: .45; }
+    .school-name {
+      font-family: 'Merriweather', serif;
+      font-size: 1.45rem; color: #fff;
+      text-align: center; line-height: 1.4;
+      margin-bottom: .5rem; position: relative; z-index: 1;
+    }
+    .school-sub {
+      font-size: .78rem; color: rgba(255,255,255,.5);
+      letter-spacing: .12em; text-transform: uppercase;
+      text-align: center; margin-bottom: 2.5rem; position: relative; z-index: 1;
+    }
+    .info-strip { display: flex; gap: 1rem; position: relative; z-index: 1; width: 100%; max-width: 320px; }
+    .info-card {
+      flex: 1;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.12);
+      border-radius: 12px; padding: .9rem .8rem;
+      text-align: center; backdrop-filter: blur(4px);
+    }
+    .info-card .num { font-size: 1.35rem; font-weight: 800; color: var(--gold-light); }
+    .info-card .lbl { font-size: .68rem; color: rgba(255,255,255,.5); margin-top: 2px; }
+
+    /* ── RIGHT PANEL ── */
+    .right-panel {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      padding: 2rem; position: relative; background: var(--cream);
+    }
+    .right-panel::before {
+      content: ''; position: absolute;
+      width: 500px; height: 500px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(26,44,91,.05) 0%, transparent 70%);
+      top: -100px; right: -100px; pointer-events: none;
+    }
+    .form-card {
+      width: 100%; max-width: 420px; background: #fff;
+      border-radius: 24px; padding: 2.8rem 2.5rem;
+      box-shadow: 0 8px 40px rgba(26,44,91,.1), 0 1px 4px rgba(26,44,91,.06);
+      position: relative; z-index: 1;
+      animation: slideUp .55s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes slideUp {
+      from { opacity:0; transform: translateY(24px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+    .form-icon {
+      width: 64px; height: 64px;
+      background: linear-gradient(135deg, var(--navy) 0%, #2a4080 100%);
+      border-radius: 16px; display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1.4rem;
+      box-shadow: 0 6px 20px rgba(26,44,91,.25);
+    }
+    .form-icon svg { width: 30px; height: 30px; color: #fff; }
+    .form-title {
+      font-family: 'Merriweather', serif; font-size: 1.7rem;
+      color: var(--navy-deep); text-align: center; margin-bottom: .4rem;
+    }
+    .form-desc { font-size: .82rem; color: #8a93a8; text-align: center; margin-bottom: 2rem; }
+
+    .field-wrap { position: relative; margin-bottom: 1.1rem; }
+    .field-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: #b0b8cc; pointer-events: none; transition: color .2s;
+      display: flex; align-items: center;
+    }
+    .field-wrap:focus-within .field-icon { color: var(--navy); }
+    input[type="text"], input[type="password"] {
+      width: 100%; padding: .85rem 1rem .85rem 2.7rem;
+      border: 1.5px solid #e2e6ef; border-radius: 12px;
+      font-family: 'Plus Jakarta Sans', sans-serif; font-size: .88rem;
+      color: var(--navy-deep); background: var(--gray-soft); outline: none;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+    }
+    input:focus { border-color: var(--navy); background: #fff; box-shadow: 0 0 0 3px rgba(26,44,91,.1); }
+    input::placeholder { color: #b0b8cc; }
+    .toggle-pass {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer; color: #b0b8cc;
+      padding: 0; transition: color .2s; display: flex; align-items: center;
+    }
+    .toggle-pass:hover { color: var(--navy); }
+
+    .role-label { font-size: .78rem; font-weight: 600; color: #8a93a8; text-transform: uppercase; letter-spacing: .08em; margin-bottom: .6rem; }
+    .role-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: .55rem; margin-bottom: 1.4rem; }
+    .role-btn {
+      padding: .55rem .3rem; border-radius: 10px;
+      border: 1.5px solid #e2e6ef; background: var(--gray-soft);
+      font-size: .75rem; font-weight: 600; color: #8a93a8;
+      cursor: pointer; text-align: center; transition: all .18s;
+    }
+    .role-btn:hover { border-color: var(--navy); color: var(--navy); }
+    .role-btn.active { border-color: var(--navy); background: var(--navy); color: #fff; }
+
+    .btn-login {
+      width: 100%; padding: .9rem;
+      background: linear-gradient(135deg, var(--navy) 0%, #2a4080 100%);
+      color: #fff; border: none; border-radius: 12px;
+      font-family: 'Plus Jakarta Sans', sans-serif; font-size: .95rem; font-weight: 700;
+      cursor: pointer; letter-spacing: .04em;
+      position: relative; overflow: hidden;
+      transition: transform .15s, box-shadow .15s;
+      box-shadow: 0 4px 16px rgba(26,44,91,.3);
+    }
+    .btn-login:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(26,44,91,.35); }
+    .btn-login:active { transform: translateY(0); }
+    .btn-login .ripple {
+      position: absolute; border-radius: 50%; background: rgba(255,255,255,.3);
+      transform: scale(0); animation: ripple .55s linear; pointer-events: none;
+    }
+    @keyframes ripple { to { transform: scale(4); opacity: 0; } }
+    .divider { display: flex; align-items: center; gap: .8rem; margin: 1.2rem 0; }
+    .divider hr { flex:1; border: none; border-top: 1px solid #e8eaf0; }
+    .divider span { font-size: .72rem; color: #b0b8cc; }
+    .btn-forgot {
+      width: 100%; padding: .8rem;
+      border: 1.5px solid #e2e6ef; border-radius: 12px; background: transparent;
+      font-family: 'Plus Jakarta Sans', sans-serif; font-size: .85rem; font-weight: 600;
+      color: #8a93a8; cursor: pointer; transition: all .18s;
+    }
+    .btn-forgot:hover { border-color: var(--navy); color: var(--navy); background: rgba(26,44,91,.04); }
+    .footer-note { text-align: center; font-size: .72rem; color: #b0b8cc; margin-top: 1.8rem; }
+    .footer-note span { color: var(--gold); font-weight: 600; }
+    .btn-login.loading .btn-text { opacity: 0; }
+    .btn-login .spinner { display: none; position: absolute; inset: 0; align-items: center; justify-content: center; }
+    .btn-login.loading .spinner { display: flex; }
+    .spin {
+      width: 20px; height: 20px;
+      border: 2px solid rgba(255,255,255,.4); border-top-color: #fff;
+      border-radius: 50%; animation: spin .6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%,60% { transform: translateX(-6px); }
+      40%,80% { transform: translateX(6px); }
+    }
+    .shake { animation: shake .4s ease; }
+    .err-msg {
+      display: none; background: #fef2f2;
+      border: 1px solid #fecaca; border-radius: 10px;
+      padding: .7rem 1rem; font-size: .8rem; color: #dc2626; margin-bottom: 1rem;
+    }
+    .err-msg.show { display: flex; align-items: center; gap: .5rem; }
+
+    /* ══════════════════════════════════════
+       MODAL
+    ══════════════════════════════════════ */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 300;
+      display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+      visibility: hidden; opacity: 0;
+      transition: opacity .35s ease, visibility .35s ease;
+    }
+    .modal-overlay.open { visibility: visible; opacity: 1; }
+
+    .modal-backdrop {
+      position: absolute; inset: 0;
+      background: rgba(8,16,38,.7);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .modal-card {
+      position: relative; z-index: 10;
+      width: 100%; max-width: 460px;
+      background: #fff; border-radius: 28px; overflow: hidden;
+      box-shadow: 0 40px 100px rgba(8,16,38,.4), 0 2px 8px rgba(8,16,38,.12);
+      transform: translateY(36px) scale(.96);
+      opacity: 0;
+      transition: transform .45s cubic-bezier(.22,1,.36,1), opacity .45s ease;
+    }
+    .modal-overlay.open .modal-card { transform: translateY(0) scale(1); opacity: 1; }
+
+    /* modal header */
+    .modal-header {
+      background: linear-gradient(140deg, var(--navy-deep) 0%, var(--navy) 55%, #2a4080 100%);
+      padding: 2.2rem 2.5rem 1.8rem;
+      position: relative; overflow: hidden; text-align: center;
+    }
+    .modal-header::after {
+      content: '';
+      position: absolute;
+      width: 340px; height: 340px; border-radius: 50%;
+      border: 2px solid rgba(232,160,32,.12);
+      top: -140px; right: -80px;
+    }
+    .mh-dots {
+      position: absolute; inset: 0;
+      background-image: radial-gradient(rgba(255,255,255,.055) 1px, transparent 1px);
+      background-size: 22px 22px;
+    }
+    .modal-close {
+      position: absolute; top: 1rem; right: 1rem;
+      width: 32px; height: 32px; border-radius: 8px;
+      background: rgba(255,255,255,.12); border: none;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,.7); transition: background .2s, color .2s; z-index: 2;
+    }
+    .modal-close:hover { background: rgba(255,255,255,.22); color: #fff; }
+
+    .modal-icon-wrap {
+      width: 72px; height: 72px;
+      background: rgba(255,255,255,.1);
+      border: 2px solid rgba(255,255,255,.18);
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1.2rem; backdrop-filter: blur(6px);
+      position: relative; z-index: 1;
+      transition: transform .3s;
+    }
+
+    /* step dots */
+    .step-dots { display: flex; justify-content: center; gap: .45rem; position: relative; z-index:1; }
+    .sdot {
+      height: 4px; border-radius: 2px;
+      background: rgba(255,255,255,.28);
+      transition: width .35s cubic-bezier(.22,1,.36,1), background .3s;
+    }
+    .sdot.active { background: var(--gold-light); }
+    .sdot.done   { background: rgba(255,255,255,.55); }
+
+    /* modal body */
+    .modal-body { padding: 2rem 2.5rem 2.5rem; }
+
+    .step-panel { display: none; }
+    .step-panel.active {
+      display: block;
+      animation: stepIn .32s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes stepIn {
+      from { opacity:0; transform: translateX(14px); }
+      to   { opacity:1; transform: translateX(0); }
+    }
+
+    .mstep-title {
+      font-family: 'Merriweather', serif;
+      font-size: 1.2rem; color: var(--navy-deep);
+      text-align: center; margin-bottom: .4rem;
+    }
+    .mstep-desc { font-size: .8rem; color: #8a93a8; text-align: center; line-height: 1.65; margin-bottom: 1.6rem; }
+
+    .mlabel {
+      display: block; font-size: .73rem; font-weight: 700; color: #8a93a8;
+      text-transform: uppercase; letter-spacing: .08em; margin-bottom: .4rem;
+    }
+
+    /* two buttons row */
+    .mactions { display: flex; gap: .75rem; margin-top: 1.5rem; }
+    .btn-mcancel {
+      flex: 1; padding: .85rem;
+      border: 1.5px solid #e2e6ef; border-radius: 12px; background: transparent;
+      font-family: 'Plus Jakarta Sans', sans-serif; font-size: .85rem; font-weight: 600;
+      color: #8a93a8; cursor: pointer; transition: all .18s;
+    }
+    .btn-mcancel:hover { border-color: var(--navy); color: var(--navy); }
+    .btn-mprimary {
+      flex: 1.6; padding: .85rem;
+      background: linear-gradient(135deg, var(--navy) 0%, #2a4080 100%);
+      color: #fff; border: none; border-radius: 12px;
+      font-family: 'Plus Jakarta Sans', sans-serif; font-size: .88rem; font-weight: 700;
+      cursor: pointer; position: relative; overflow: hidden;
+      transition: transform .15s, box-shadow .15s;
+      box-shadow: 0 4px 14px rgba(26,44,91,.3);
+      display: flex; align-items: center; justify-content: center; gap: .45rem;
+    }
+    .btn-mprimary:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(26,44,91,.35); }
+    .btn-mprimary:active { transform: translateY(0); }
+    .btn-mprimary.full { flex: 1; }
+
+    /* OTP */
+    .otp-row { display: flex; gap: .55rem; justify-content: center; margin-bottom: 1.2rem; }
+    .otp-box {
+      width: 50px; height: 58px;
+      border: 1.5px solid #e2e6ef; border-radius: 12px;
+      text-align: center; font-size: 1.4rem; font-weight: 700;
+      color: var(--navy-deep); background: var(--gray-soft); outline: none;
+      transition: border-color .2s, box-shadow .2s, background .2s;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      caret-color: transparent;
+    }
+    .otp-box:focus { border-color: var(--navy); background: #fff; box-shadow: 0 0 0 3px rgba(26,44,91,.1); }
+    .otp-box.filled { border-color: var(--navy); background: rgba(26,44,91,.04); }
+
+    .hint-otp { font-size: .75rem; color: #b0b8cc; text-align: center; margin-top: -.4rem; margin-bottom: 1rem; }
+    .hint-otp a { color: var(--navy); font-weight: 700; cursor: pointer; text-decoration: none; }
+    .hint-otp a:hover { text-decoration: underline; }
+
+    /* success */
+    .success-ring {
+      width: 88px; height: 88px; border-radius: 50%;
+      background: linear-gradient(135deg, #059669, #34d399);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1.4rem;
+      box-shadow: 0 10px 30px rgba(5,150,105,.28);
+      animation: popIn .5s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes popIn {
+      from { transform: scale(0) rotate(-20deg); opacity: 0; }
+      to   { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    .mfooter { text-align: center; font-size: .72rem; color: #b0b8cc; margin-top: 1.4rem; }
+    .mfooter a { color: var(--navy); font-weight: 700; text-decoration: none; }
+    .mfooter a:hover { text-decoration: underline; }
+
+    /* input error highlight */
+    input.input-error { border-color: #dc2626 !important; box-shadow: 0 0 0 3px rgba(220,38,38,.1) !important; }
+  </style>
 </head>
-<body class="bg-white min-h-screen flex flex-col lg:flex-row">
+<body>
 
-    <!-- Left Panel: Brand Experience -->
-    <div class="hidden lg:flex lg:w-[55%] login-gradient relative items-center justify-center p-16">
-        <div class="absolute top-0 left-0 w-full h-full opacity-20">
-            <div class="absolute top-20 left-20 w-64 h-64 bg-white rounded-full blur-3xl"></div>
-            <div class="absolute bottom-20 right-20 w-96 h-96 bg-indigo-400 rounded-full blur-3xl"></div>
-        </div>
-        
-        <div class="relative z-10 text-center text-white">
-            <div class="mb-10 animate-subtle inline-block">
-                <div class="w-24 h-24 bg-white/10 backdrop-blur-md rounded-3xl border border-white/20 flex items-center justify-center shadow-2xl">
-                    <i class="fas fa-graduation-cap text-5xl"></i>
-                </div>
-            </div>
-            <h1 class="text-6xl font-black tracking-tighter mb-4">E-RAPORT</h1>
-            <p class="text-indigo-100 text-xl font-medium max-w-md mx-auto leading-relaxed opacity-80">
-                Solusi digital penilaian masa depan untuk siswa unggul SMKN 1 Sungailiat.
-            </p>
-            
-            <div class="mt-16 flex items-center justify-center space-x-8">
-                <div class="text-center">
-                    <p class="text-3xl font-bold">2026</p>
-                    <p class="text-xs font-bold text-indigo-300 uppercase tracking-widest">Tahun Ajaran</p>
-                </div>
-                <div class="h-10 w-px bg-white/20"></div>
-                <div class="text-center">
-                    <p class="text-3xl font-bold">100%</p>
-                    <p class="text-xs font-bold text-indigo-300 uppercase tracking-widest">Digitalisasi</p>
-                </div>
-            </div>
-        </div>
-
-        <div class="absolute bottom-12 text-center w-full">
-            <p class="text-indigo-300 text-[10px] font-bold uppercase tracking-[0.4em]">TIM IT SMKN 1 SUNGAILIAT &copy; 2026</p>
-        </div>
+  <!-- ═══ LEFT ═══ -->
+  <div class="left-panel">
+    <div class="dot-grid"></div>
+    <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;width:100%;max-width:320px;">
+      <div class="logo-box">
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+          <rect x="8" y="8" width="40" height="40" rx="8" stroke="white" stroke-width="2"/>
+          <circle cx="28" cy="22" r="7" stroke="white" stroke-width="2"/>
+          <path d="M14 44c0-7.732 6.268-14 14-14s14 6.268 14 14" stroke="white" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="gold-bar"></div>
+      <div class="school-name">SMKN 1 Sungailiat</div>
+      <div class="school-sub">Bangka Belitung · Est. 1967</div>
+      <p style="font-size:.82rem;color:rgba(255,255,255,.55);text-align:center;line-height:1.7;margin-bottom:2.5rem;position:relative;z-index:1;">
+        Sistem Informasi E-Raport<br>Memudahkan pelaporan hasil belajar<br>siswa secara digital dan terintegrasi.
+      </p>
+      <div class="info-strip">
+        <div class="info-card"><div class="num">1.2K+</div><div class="lbl">Siswa</div></div>
+        <div class="info-card"><div class="num">80+</div><div class="lbl">Guru</div></div>
+        <div class="info-card"><div class="num">12</div><div class="lbl">Jurusan</div></div>
+      </div>
     </div>
+  </div>
 
-    <!-- Right Panel: Auth Container -->
-    <div class="w-full lg:w-[45%] min-h-screen flex items-center justify-center p-4 sm:p-8 relative bg-slate-50 lg:bg-white overflow-y-auto">
-        <!-- Floating shapes for mobile -->
-        <div class="lg:hidden absolute top-0 left-0 w-full h-48 login-gradient -z-0 rounded-b-[40px]"></div>
+  <!-- ═══ RIGHT ═══ -->
+  <div class="right-panel">
+    <div class="form-card">
+      <div class="form-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+        </svg>
+      </div>
+      <div class="form-title">Masuk</div>
+      <div class="form-desc">Selamat datang di E-Raport SMKN 1 Sungailiat</div>
 
-        <div class="w-full max-w-[400px] relative z-10 my-auto">
-            <!-- Mobile Header -->
-            <div class="lg:hidden text-center mb-8 pt-4">
-                <div class="w-16 h-16 bg-white rounded-2xl shadow-xl mx-auto flex items-center justify-center mb-4">
-                    <i class="fas fa-graduation-cap text-indigo-600 text-2xl"></i>
-                </div>
-                <h2 class="text-2xl font-black text-white tracking-tight">E-RAPORT</h2>
-            </div>
-
-            <!-- Form Card -->
-            <div class="bg-white p-6 sm:p-10 rounded-[32px] shadow-2xl shadow-slate-200/50 lg:shadow-none border border-slate-100 lg:border-none">
-                <div class="mb-8 text-center lg:text-left">
-                    <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">Masuk</h3>
-                    <p class="text-slate-400 text-sm font-medium">Gunakan kredensial (NISN/NIP) Anda.</p>
-                </div>
-
-                @if($errors->any())
-                <div class="mb-6 animate-shake">
-                    <div class="bg-red-50 text-red-600 p-4 rounded-2xl text-xs font-bold border-l-4 border-red-500 flex items-center">
-                        <i class="fas fa-exclamation-circle mr-3"></i>
-                        {{ $errors->first() }}
-                    </div>
-                </div>
-                @endif
-
-                @if(session('success'))
-                <div class="mb-6">
-                    <div class="bg-emerald-50 text-emerald-600 p-4 rounded-2xl text-xs font-bold border-l-4 border-emerald-500 flex items-center">
-                        <i class="fas fa-check-circle mr-3"></i>
-                        {{ session('success') }}
-                    </div>
-                </div>
-                @endif
-
-                <form action="{{ route('login.post') }}" method="POST" class="space-y-6">
-                    @csrf
-                    
-                    <div class="space-y-2">
-                        <label class="text-[11px] font-black text-slate-500 uppercase tracking-widest ml-1" for="login">ID Pengguna</label>
-                        <div class="relative group">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-600 transition-colors">
-                                <i class="fas fa-id-card text-sm"></i>
-                            </div>
-                            <input type="text" name="login" id="login" required autofocus
-                                class="w-full pl-12 pr-4 py-4 bg-slate-50 lg:bg-white border-2 border-slate-100 lg:border-slate-200 rounded-2xl text-sm font-bold text-slate-700 placeholder:text-slate-400 focus:border-indigo-600 focus:bg-white outline-none transition-all input-focus-ring"
-                                placeholder="NISN / NIP / Email">
-                        </div>
-                    </div>
-
-                    <div class="space-y-2">
-                        <div class="flex justify-between items-center px-1">
-                            <label class="text-[11px] font-black text-slate-500 uppercase tracking-widest" for="password">Kata Sandi</label>
-                            <a href="javascript:void(0)" onclick="openModal()" class="text-[11px] font-black text-indigo-600 hover:text-indigo-800 transition-colors">Lupa?</a>
-                        </div>
-                        <div class="relative group">
-                            <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400 group-focus-within:text-indigo-600 transition-colors">
-                                <i class="fas fa-lock text-sm"></i>
-                            </div>
-                            <input type="password" name="password" id="password" required
-                                class="w-full pl-12 pr-4 py-4 bg-slate-50 lg:bg-white border-2 border-slate-100 lg:border-slate-200 rounded-2xl text-sm font-bold text-slate-700 placeholder:text-slate-400 focus:border-indigo-600 focus:bg-white outline-none transition-all input-focus-ring"
-                                placeholder="••••••••">
-                        </div>
-                    </div>
-
-                    <div class="flex items-center px-1">
-                        <label class="flex items-center cursor-pointer group">
-                            <input type="checkbox" name="remember" class="w-5 h-5 rounded-lg border-2 border-slate-200 text-indigo-600 focus:ring-0 transition-all cursor-pointer">
-                            <span class="ml-3 text-[13px] font-bold text-slate-500 group-hover:text-slate-700 transition-colors">Ingat Saya</span>
-                        </label>
-                    </div>
-
-                    <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-4 rounded-2xl shadow-xl shadow-indigo-200 hover:shadow-indigo-300 transition-all active:scale-[0.98] flex items-center justify-center space-x-2">
-                        <span>Masuk ke Sistem</span>
-                        <i class="fas fa-chevron-right text-xs"></i>
-                    </button>
-                </form>
-            </div>
+      <form action="{{ route('login.post') }}" method="POST" id="loginForm">
+        @csrf
+        <div class="err-msg {{ $errors->has('login') ? 'show' : '' }}" id="errMsg">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <span id="errText">{{ $errors->first('login') ?? 'Username atau password salah.' }}</span>
         </div>
-    </div>
 
-    <!-- Tidy Modal Lupa Password -->
-    <div id="forgotModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-md hidden items-center justify-center z-50 p-4 sm:p-6">
-        <div class="bg-white rounded-[40px] p-8 sm:p-10 w-full max-w-sm shadow-2xl">
-            <div class="w-20 h-20 bg-amber-50 rounded-3xl flex items-center justify-center text-amber-500 text-3xl mb-8 mx-auto">
-                <i class="fas fa-shield-alt"></i>
-            </div>
-            <h3 class="text-2xl font-black text-slate-900 text-center mb-3">Reset Akses</h3>
-            <p class="text-slate-500 text-center text-sm font-medium mb-8 leading-relaxed">Admin akan memverifikasi ID Anda untuk melakukan reset password.</p>
-            <form action="{{ route('forgot-password') }}" method="POST">
-                @csrf
-                <div class="space-y-4">
-                    <input type="text" name="username" placeholder="Masukkan NISN / NIP" required
-                        class="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl text-sm font-bold focus:border-amber-500 outline-none transition-all">
-                    <div class="flex gap-4">
-                        <button type="button" onclick="closeModal()" class="flex-1 py-4 text-sm font-bold text-slate-400 hover:text-slate-600 transition">Batal</button>
-                        <button type="submit" class="flex-1 py-4 bg-slate-900 text-white rounded-2xl text-sm font-extrabold shadow-lg hover:bg-black transition active:scale-95">Kirim</button>
-                    </div>
-                </div>
-            </form>
+        <div class="field-wrap">
+          <span class="field-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.582-7 8-7s8 3 8 7"/></svg>
+          </span>
+          <input type="text" id="username" name="login" placeholder="NISN / NIP / Email" autocomplete="username" value="{{ old('login') }}" required/>
         </div>
-    </div>
 
+        <div class="field-wrap" style="margin-bottom:1.4rem;">
+          <span class="field-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </span>
+          <input type="password" id="password" name="password" placeholder="Masukkan password" required/>
+          <button class="toggle-pass" id="togglePass" type="button">
+            <svg id="eyeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+
+        <div style="margin-bottom:1.5rem;display:flex;align-items:center;gap:.5rem;">
+          <input type="checkbox" id="remember" name="remember" style="width:auto;margin:0;accent-color:var(--navy);">
+          <label for="remember" style="font-size:.75rem;color:#8a93a8;font-weight:600;cursor:pointer;">Ingat Saya</label>
+        </div>
+
+        <button class="btn-login" id="loginBtn" type="submit">
+          <span class="btn-text">Masuk</span>
+          <span class="spinner"><div class="spin"></div></span>
+        </button>
+      </form>
+
+      <div class="divider"><hr/><span>atau</span><hr/></div>
+
+      <button class="btn-forgot" id="openResetModal" type="button">🔑 Lupa Password?</button>
+      <div class="footer-note">Tahun Pelajaran <span>2025/2026</span> · Semester Genap</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       MODAL — RESET PASSWORD (SIMPLIFIED)
+  ═══════════════════════════════════════════ -->
+  <div class="modal-overlay" id="resetModal">
+    <div class="modal-backdrop" id="mBackdrop"></div>
+
+    <div class="modal-card">
+      <!-- Header -->
+      <div class="modal-header">
+        <div class="mh-dots"></div>
+        <button class="modal-close" id="mClose">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+
+        <div class="modal-icon-wrap">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="modal-body">
+        <form action="{{ route('forgot-password') }}" method="POST">
+          @csrf
+          <div class="mstep-title">Lupa Kata Sandi?</div>
+          <div class="mstep-desc">Masukkan NISN (siswa) atau NIP (guru/admin) Anda. Kami akan mengirimkan permintaan reset kata sandi ke Admin Sekolah.</div>
+
+          <label class="mlabel">NISN / NIP</label>
+          <div class="field-wrap">
+            <span class="field-icon">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+            </span>
+            <input type="text" name="username" placeholder="Masukkan NISN / NIP Anda" required/>
+          </div>
+
+          <div class="mactions">
+            <button type="button" class="btn-mcancel" id="s1Cancel">Batal</button>
+            <button type="submit" class="btn-mprimary">
+              Ajukan Reset
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </form>
+        <div class="mfooter">Butuh bantuan? <a href="#">Hubungi Admin Sekolah</a></div>
+      </div>
+    </div>
+  </div>
+
+  @if(session('success'))
     <script>
-        function openModal() {
-            const modal = document.getElementById('forgotModal');
-            modal.style.display = 'flex';
-            modal.classList.add('animate-in', 'fade-in', 'duration-300');
-        }
-        function closeModal() {
-            document.getElementById('forgotModal').style.display = 'none';
-        }
+      alert("{{ session('success') }}");
     </script>
+  @endif
+  @if($errors->has('username'))
+    <script>
+      alert("{{ $errors->first('username') }}");
+    </script>
+  @endif
 
+<script>
+  /* ── Toggle password ── */
+  const pIn = document.getElementById('password');
+  const eIc = document.getElementById('eyeIcon');
+  document.getElementById('togglePass').addEventListener('click', () => {
+    const s = pIn.type === 'password';
+    pIn.type = s ? 'text' : 'password';
+    eIc.innerHTML = s
+      ? `<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>`
+      : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
+  });
+
+  /* ── Login button ── */
+  document.getElementById('loginBtn').addEventListener('click', function(e) {
+    const btn = this;
+    const rect = btn.getBoundingClientRect();
+    const r = document.createElement('span');
+    r.className = 'ripple';
+    const sz = Math.max(rect.width, rect.height);
+    r.style.cssText = `width:${sz}px;height:${sz}px;left:${e.clientX-rect.left-sz/2}px;top:${e.clientY-rect.top-sz/2}px`;
+    btn.appendChild(r);
+    setTimeout(() => r.remove(), 600);
+
+    // Animasi loading sebentar sebelum submit
+    const user = document.getElementById('username').value.trim();
+    const pass = pIn.value;
+    if (user && pass) {
+      btn.classList.add('loading');
+      // Form akan terkirim secara otomatis karena type="submit"
+    } else {
+      e.preventDefault();
+      const err  = document.getElementById('errMsg');
+      document.getElementById('errText').textContent = 'Username dan password tidak boleh kosong.';
+      err.classList.add('show');
+      bumpCard();
+    }
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginBtn').click(); });
+  function bumpCard() {
+    const c = document.querySelector('.form-card');
+    c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake');
+  }
+
+  /* ════════════ MODAL ════════════ */
+  const modal = document.getElementById('resetModal');
+
+  function openModal()  { modal.classList.add('open'); document.body.style.overflow = 'hidden'; }
+  function closeModal() { modal.classList.remove('open'); document.body.style.overflow = ''; }
+
+  document.getElementById('openResetModal').addEventListener('click', openModal);
+  document.getElementById('mClose').addEventListener('click', closeModal);
+  document.getElementById('mBackdrop').addEventListener('click', closeModal);
+  document.getElementById('s1Cancel').addEventListener('click', closeModal);
+</script>
 </body>
 </html>

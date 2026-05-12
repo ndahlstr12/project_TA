@@ -12,6 +12,68 @@ use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:csv,txt',
+        ]);
+
+        $file = $request->file('file');
+        $handle = fopen($file->getRealPath(), 'r');
+        
+        // Lewati header
+        fgetcsv($handle);
+
+        $count = 0;
+        DB::beginTransaction();
+        try {
+            while (($data = fgetcsv($handle, 1000, ',')) !== FALSE) {
+                if (count($data) >= 5) {
+                    $name = $data[0];
+                    $email = $data[1];
+                    $password = $data[2];
+                    $role = $data[3];
+                    $identifier = $data[4]; // NIP atau NISN
+
+                    $guruId = null;
+                    $siswaId = null;
+
+                    if (in_array($role, ['guru', 'walikelas'])) {
+                        $guru = Guru::firstOrCreate(
+                            ['nip' => $identifier],
+                            ['nama' => $name]
+                        );
+                        $guruId = $guru->id;
+                    }
+
+                    if (in_array($role, ['siswa', 'orangtua'])) {
+                        $siswa = \App\Models\Siswa::where('nisn', $identifier)->first();
+                        if ($siswa) {
+                            $siswaId = $siswa->id;
+                        }
+                    }
+
+                    User::create([
+                        'name' => $name,
+                        'email' => $email,
+                        'password' => Hash::make($password),
+                        'role' => $role,
+                        'guru_id' => $guruId,
+                        'siswa_id' => $siswaId,
+                    ]);
+                    $count++;
+                }
+            }
+            DB::commit();
+            fclose($handle);
+            return back()->with('success', "$count pengguna berhasil diimport.");
+        } catch (\Exception $e) {
+            DB::rollBack();
+            fclose($handle);
+            return back()->with('error', 'Gagal mengimport data: ' . $e->getMessage());
+        }
+    }
+
     public function index(Request $request)
     {
         $role = $request->query('role');
@@ -106,12 +168,19 @@ class UserController extends Controller
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'role' => ['required', Rule::in(['admin', 'guru', 'walikelas', 'siswa', 'orangtua'])],
+            'password' => ['nullable', 'string', 'min:8'],
         ]);
 
-        $user->update($validated);
+        $user->update([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'role' => $validated['role'],
+        ]);
 
-        if ($request->filled('password')) {
-            $user->update(['password' => Hash::make($request->password)]);
+        // Update password hanya jika diisi dan user bukan admin
+        if ($request->filled('password') && $user->role !== 'admin') {
+            $user->password = $request->password;
+            $user->save();
         }
 
         return redirect()->route('admin.users.index')->with('success', 'Data pengguna berhasil diperbarui.');

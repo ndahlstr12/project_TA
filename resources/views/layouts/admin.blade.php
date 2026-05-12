@@ -454,8 +454,9 @@
                             ['label' => 'Beranda', 'icon' => 'ti-home', 'route' => 'admin.dashboard'],
                             ['label' => 'Notifikasi', 'icon' => 'ti-bell', 'route' => 'admin.notifications.index'],
                         ],
-                        '' => [
-                            ['label' => 'Manajemen Data', 'icon' => 'ti-shield-check', 'route' => 'admin.users.index'],
+                        'Data Master' => [
+                            ['label' => 'Manajemen Kelas', 'icon' => 'ti-category', 'route' => 'admin.kelas.index'],
+                            ['label' => 'Manajemen User', 'icon' => 'ti-shield-check', 'route' => 'admin.users.index'],
                         ],
                         'Akademik' => [
                             ['label' => 'Jadwal Pelajaran', 'icon' => 'ti-calendar-event', 'route' => 'admin.jadwal.index'],

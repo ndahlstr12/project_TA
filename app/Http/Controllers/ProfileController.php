@@ -43,14 +43,20 @@ class ProfileController extends Controller
 
     public function updatePassword(Request $request)
     {
+        $user = $request->user();
+
+        // Admin tidak diperbolehkan ganti password demi keamanan sistem
+        if ($user->role === 'admin') {
+            return back()->with('error', 'Akun Administrator tidak diperbolehkan mengganti kata sandi.');
+        }
+
         $request->validate([
             'current_password' => ['required', 'current_password'],
             'password' => ['required', Password::defaults(), 'confirmed'],
         ]);
 
-        Auth::user()->update([
-            'password' => Hash::make($request->password),
-        ]);
+        $user->password = $request->password;
+        $user->save();
 
         return back()->with('success', 'Kata sandi berhasil diperbarui.');
     }

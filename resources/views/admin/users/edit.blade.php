@@ -88,6 +88,7 @@
                         <!-- Password (Opsional) -->
                         <div class="space-y-2">
                             <label class="text-sm font-bold text-slate-700 ml-1">Kata Sandi Baru</label>
+                            @if($user->role !== 'admin')
                             <div class="relative">
                                 <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
                                     <i class="fas fa-lock"></i>
@@ -96,6 +97,13 @@
                                        class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all outline-none">
                             </div>
                             <p class="text-[10px] text-slate-400 mt-1 ml-1 font-medium italic">*Isi hanya jika ingin mengganti password</p>
+                            @else
+                            <div class="p-4 bg-amber-50 border border-amber-200 rounded-2xl">
+                                <p class="text-[10px] font-bold text-amber-700 uppercase leading-relaxed">
+                                    <i class="fas fa-exclamation-triangle mr-1"></i> Proteksi Sistem: Kata sandi akun Administrator tidak dapat diubah di sini.
+                                </p>
+                            </div>
+                            @endif
                         </div>
                     </div>
 

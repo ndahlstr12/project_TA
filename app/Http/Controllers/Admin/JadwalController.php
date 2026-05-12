@@ -32,7 +32,31 @@ class JadwalController extends Controller
 
     public function import(Request $request)
     {
-        // Logika import excel
-        return back()->with('success', 'Jadwal berhasil diimport.');
+        $request->validate([
+            'file' => 'required|mimes:csv,txt',
+        ]);
+
+        $file = $request->file('file');
+        $handle = fopen($file->getRealPath(), 'r');
+        
+        // Lewati header jika ada
+        fgetcsv($handle);
+
+        while (($data = fgetcsv($handle, 1000, ',')) !== FALSE) {
+            if (count($data) >= 6) {
+                Jadwal::create([
+                    'hari' => $data[0],
+                    'jam_mulai' => $data[1],
+                    'jam_selesai' => $data[2],
+                    'mapel' => $data[3],
+                    'guru' => $data[4],
+                    'kelas' => $data[5],
+                ]);
+            }
+        }
+
+        fclose($handle);
+
+        return back()->with('success', 'Jadwal berhasil diimport dari file CSV.');
     }
 }

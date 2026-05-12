@@ -50,6 +50,131 @@
         @endforeach
     </div>
 
+    <!-- Teacher Monitoring Section -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <!-- Monitoring Wali Kelas -->
+        <div class="card-pro p-8 border-l-4 border-l-blue-500">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-sm font-extrabold uppercase tracking-widest text-navy-400">Progres Wali Kelas</h3>
+                    <p class="text-[10px] text-navy-300 font-bold uppercase mt-1">Pengisian Raport Semester</p>
+                </div>
+                <div class="text-right">
+                    <span class="text-2xl font-black text-navy-900 dark:text-white">{{ $stats['walikelas_selesai'] }}/{{ $stats['walikelas_total'] }}</span>
+                </div>
+            </div>
+            @php
+                $waliPercent = $stats['walikelas_total'] > 0 ? ($stats['walikelas_selesai'] / $stats['walikelas_total']) * 100 : 0;
+            @endphp
+            <div class="space-y-3">
+                <div class="w-full bg-navy-50 dark:bg-white/5 h-2.5 rounded-full overflow-hidden">
+                    <div class="bg-blue-500 h-full rounded-full transition-all duration-1000" style="width: {{ $waliPercent }}%"></div>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-[10px] font-bold text-navy-400 uppercase">Tingkat Penyelesaian</span>
+                    <span class="text-[10px] font-black text-blue-500">{{ round($waliPercent) }}%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Monitoring Guru Mapel -->
+        <div class="card-pro p-8 border-l-4 border-l-gold-500">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-sm font-extrabold uppercase tracking-widest text-navy-400">Progres Guru Mapel</h3>
+                    <p class="text-[10px] text-navy-300 font-bold uppercase mt-1">Upload Nilai Mata Pelajaran</p>
+                </div>
+                <div class="text-right">
+                    <span class="text-2xl font-black text-navy-900 dark:text-white">{{ $stats['guru_mapel_selesai'] }}/{{ $stats['guru_mapel_total'] }}</span>
+                </div>
+            </div>
+            @php
+                $guruPercent = $stats['guru_mapel_total'] > 0 ? ($stats['guru_mapel_selesai'] / $stats['guru_mapel_total']) * 100 : 0;
+            @endphp
+            <div class="space-y-3">
+                <div class="w-full bg-navy-50 dark:bg-white/5 h-2.5 rounded-full overflow-hidden">
+                    <div class="bg-gold-500 h-full rounded-full transition-all duration-1000" style="width: {{ $guruPercent }}%"></div>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-[10px] font-bold text-navy-400 uppercase">Tingkat Penyelesaian</span>
+                    <span class="text-[10px] font-black text-gold-500">{{ round($guruPercent) }}%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Teacher Status Table Section -->
+    <div class="space-y-6">
+        <div class="flex items-center justify-between px-2">
+            <h3 class="text-sm font-extrabold uppercase tracking-widest text-navy-400">Daftar Detail Progres Guru</h3>
+            <a href="#" class="text-[10px] font-bold text-blue-500 uppercase tracking-widest hover:underline">Lihat Semua Guru</a>
+        </div>
+
+        <div class="card-pro overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-navy-50/50 dark:bg-white/5 border-b border-navy-100 dark:border-white/5">
+                            <th class="px-8 py-5 text-[10px] font-extrabold text-navy-400 uppercase tracking-widest">Nama Tenaga Pendidik</th>
+                            <th class="px-8 py-5 text-[10px] font-extrabold text-navy-400 uppercase tracking-widest text-center">Peran</th>
+                            <th class="px-8 py-5 text-[10px] font-extrabold text-navy-400 uppercase tracking-widest text-center">Jenis Tugas</th>
+                            <th class="px-8 py-5 text-[10px] font-extrabold text-navy-400 uppercase tracking-widest text-center">Status</th>
+                            <th class="px-8 py-5 text-[10px] font-extrabold text-navy-400 uppercase tracking-widest text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-navy-100 dark:divide-white/5">
+                        @foreach($pendingTeachers as $teacher)
+                        <tr class="hover:bg-navy-50/30 dark:hover:bg-white/5 transition-colors group">
+                            <td class="px-8 py-5">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-9 h-9 rounded-xl bg-slate-100 dark:bg-white/5 text-navy-900 dark:text-white flex items-center justify-center text-xs font-bold border border-navy-100 dark:border-white/10 group-hover:scale-110 transition-transform">
+                                        {{ substr($teacher->name, 0, 1) }}
+                                    </div>
+                                    <span class="text-sm font-bold text-navy-900 dark:text-white">{{ $teacher->name }}</span>
+                                </div>
+                            </td>
+                            <td class="px-8 py-5 text-center">
+                                <span class="px-2 py-1 bg-navy-50 dark:bg-white/5 text-[9px] font-black text-navy-400 uppercase rounded-lg border border-navy-100 dark:border-white/10">
+                                    {{ $teacher->role }}
+                                </span>
+                            </td>
+                            <td class="px-8 py-5 text-center">
+                                <span class="text-xs font-bold text-navy-500 dark:text-navy-400">{{ $teacher->tipe_tugas }}</span>
+                            </td>
+                            <td class="px-8 py-5">
+                                <div class="flex items-center justify-center">
+                                    @if($teacher->status_tugas === 'Selesai')
+                                    <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                                        <div class="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                                        <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-500 uppercase">Selesai</span>
+                                    </div>
+                                    @else
+                                    <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-rose-500/10 border border-rose-500/20">
+                                        <div class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></div>
+                                        <span class="text-[10px] font-bold text-rose-600 dark:text-rose-500 uppercase">Tertunda</span>
+                                    </div>
+                                    @endif
+                                </div>
+                            </td>
+                            <td class="px-8 py-5 text-right">
+                                @if($teacher->status_tugas !== 'Selesai')
+                                <button class="p-2 text-navy-400 hover:text-blue-500 transition-colors" title="Kirim Pengingat">
+                                    <i data-lucide="bell-ring" class="w-4 h-4"></i>
+                                </button>
+                                @else
+                                <button class="p-2 text-emerald-500 opacity-50 cursor-not-allowed" title="Sudah Selesai">
+                                    <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                                </button>
+                                @endif
+                            </td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <!-- Analytical Surface -->
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <!-- Main Chart -->

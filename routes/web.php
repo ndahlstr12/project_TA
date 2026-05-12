@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\SiswaController;
 use App\Http\Controllers\Admin\GuruController;
 use App\Http\Controllers\Admin\CbtController;
 use App\Http\Controllers\Admin\JadwalController;
+use App\Http\Controllers\Admin\KelasController;
 
 use App\Http\Controllers\GuruController as TeacherController;
 use App\Http\Controllers\WaliKelasController;
@@ -43,6 +44,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     
     // Separate User Management
+    Route::post('/users/import', [UserController::class, 'import'])->name('users.import');
     Route::get('/users/guru', [UserController::class, 'indexGuru'])->name('users.guru');
     Route::get('/users/siswa', [UserController::class, 'indexSiswa'])->name('users.siswa');
     Route::get('/users/orangtua', [UserController::class, 'indexOrangTua'])->name('users.orangtua');
@@ -50,6 +52,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 
     Route::resource('siswas', SiswaController::class);
     Route::resource('gurus', GuruController::class);
+    Route::resource('kelas', KelasController::class);
     Route::resource('kriteria', KriteriaController::class);
 
     // Jadwal

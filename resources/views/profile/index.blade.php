@@ -74,27 +74,39 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div class="space-y-2">
                             <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1">Nama Lengkap</label>
-                            <input type="text" name="name" value="{{ Auth::user()->name }}" 
-                                class="w-full px-4 py-3 bg-neutral-50 dark:bg-white/5 border border-base rounded-lg text-sm font-medium focus:border-neutral-950 dark:focus:border-white outline-none transition-all" required>
+                            <input type="text" name="name" value="{{ old('name', Auth::user()->name) }}" 
+                                class="w-full px-4 py-3 bg-neutral-50 dark:bg-white/5 border @error('name') border-rose-500 @else border-base @enderror rounded-lg text-sm font-medium focus:border-neutral-950 dark:focus:border-white outline-none transition-all" required>
+                            @error('name')
+                                <p class="text-[10px] font-bold text-rose-500 mt-1 ml-1 uppercase tracking-tight">{{ $message }}</p>
+                            @enderror
                         </div>
                         <div class="space-y-2">
                             <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1">Username / ID</label>
-                            <input type="text" name="username" value="{{ Auth::user()->username }}" 
-                                class="w-full px-4 py-3 bg-neutral-50 dark:bg-white/5 border border-base rounded-lg text-sm font-medium focus:border-neutral-950 dark:focus:border-white outline-none transition-all">
+                            <input type="text" name="username" value="{{ old('username', Auth::user()->username) }}" 
+                                class="w-full px-4 py-3 bg-neutral-50 dark:bg-white/5 border @error('username') border-rose-500 @else border-base @enderror rounded-lg text-sm font-medium focus:border-neutral-950 dark:focus:border-white outline-none transition-all">
+                            @error('username')
+                                <p class="text-[10px] font-bold text-rose-500 mt-1 ml-1 uppercase tracking-tight">{{ $message }}</p>
+                            @enderror
                         </div>
                     </div>
 
                     <div class="space-y-2">
                         <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1">Email Sistem</label>
-                        <input type="email" name="email" value="{{ Auth::user()->email }}" 
-                            class="w-full px-4 py-3 bg-neutral-50 dark:bg-white/5 border border-base rounded-lg text-sm font-medium focus:border-neutral-950 dark:focus:border-white outline-none transition-all">
+                        <input type="email" name="email" value="{{ old('email', Auth::user()->email) }}" 
+                            class="w-full px-4 py-3 bg-neutral-50 dark:bg-white/5 border @error('email') border-rose-500 @else border-base @enderror rounded-lg text-sm font-medium focus:border-neutral-950 dark:focus:border-white outline-none transition-all">
+                        @error('email')
+                            <p class="text-[10px] font-bold text-rose-500 mt-1 ml-1 uppercase tracking-tight">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     @if((Auth::user()->role === 'siswa' || Auth::user()->role === 'orangtua') && Auth::user()->siswa)
                     <div class="space-y-2">
                         <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1">Email Orang Tua (Notifikasi Raport)</label>
-                        <input type="email" name="email_orang_tua" value="{{ Auth::user()->siswa->email_orang_tua }}" 
-                            class="w-full px-4 py-3 bg-neutral-50 dark:bg-white/5 border border-base rounded-lg text-sm font-medium focus:border-neutral-950 dark:focus:border-white outline-none transition-all" placeholder="contoh@gmail.com">
+                        <input type="email" name="email_orang_tua" value="{{ old('email_orang_tua', Auth::user()->siswa->email_orang_tua) }}" 
+                            class="w-full px-4 py-3 bg-neutral-50 dark:bg-white/5 border @error('email_orang_tua') border-rose-500 @else border-base @enderror rounded-lg text-sm font-medium focus:border-neutral-950 dark:focus:border-white outline-none transition-all" placeholder="contoh@gmail.com">
+                        @error('email_orang_tua')
+                            <p class="text-[10px] font-bold text-rose-500 mt-1 ml-1 uppercase tracking-tight">{{ $message }}</p>
+                        @enderror
                         <p class="text-[9px] text-neutral-400 italic mt-2">* Digunakan untuk transmisi dokumen raport PDF secara digital.</p>
                     </div>
                     @endif
@@ -107,6 +119,7 @@
                 </form>
             </div>
 
+            @if(Auth::user()->role !== 'admin')
             <!-- Ganti Password -->
             <div class="card-pro p-8 lg:p-10">
                 <div class="flex items-center gap-3 mb-10">
@@ -123,14 +136,20 @@
                     <div class="space-y-2">
                         <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1">Kata Sandi Saat Ini</label>
                         <input type="password" name="current_password" 
-                            class="w-full px-4 py-3 bg-neutral-50 dark:bg-white/5 border border-base rounded-lg text-sm font-medium focus:border-neutral-950 dark:focus:border-white outline-none transition-all" required>
+                            class="w-full px-4 py-3 bg-neutral-50 dark:bg-white/5 border @error('current_password') border-rose-500 @else border-base @enderror rounded-lg text-sm font-medium focus:border-neutral-950 dark:focus:border-white outline-none transition-all" required>
+                        @error('current_password')
+                            <p class="text-[10px] font-bold text-rose-500 mt-1 ml-1 uppercase tracking-tight">{{ $message }}</p>
+                        @enderror
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div class="space-y-2">
                             <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1">Kata Sandi Baru</label>
                             <input type="password" name="password" 
-                                class="w-full px-4 py-3 bg-neutral-50 dark:bg-white/5 border border-base rounded-lg text-sm font-medium focus:border-neutral-950 dark:focus:border-white outline-none transition-all" required>
+                                class="w-full px-4 py-3 bg-neutral-50 dark:bg-white/5 border @error('password') border-rose-500 @else border-base @enderror rounded-lg text-sm font-medium focus:border-neutral-950 dark:focus:border-white outline-none transition-all" required>
+                            @error('password')
+                                <p class="text-[10px] font-bold text-rose-500 mt-1 ml-1 uppercase tracking-tight">{{ $message }}</p>
+                            @enderror
                         </div>
                         <div class="space-y-2">
                             <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1">Konfirmasi Sandi</label>
@@ -146,6 +165,22 @@
                     </div>
                 </form>
             </div>
+            @else
+            <!-- Notice for Admin -->
+            <div class="card-pro p-8 lg:p-10 border-amber-500/20 bg-amber-500/5">
+                <div class="flex items-start gap-4 text-amber-600 dark:text-amber-500">
+                    <div class="p-3 bg-amber-500/10 rounded-xl">
+                        <i data-lucide="shield-alert" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold uppercase tracking-widest mb-1">Kebijakan Keamanan</h4>
+                        <p class="text-xs font-medium leading-relaxed opacity-80">
+                            Akun Administrator tidak diperbolehkan mengganti kata sandi melalui panel ini demi menjaga integritas sistem. Hubungi administrator database untuk perubahan kredensial tingkat tinggi.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            @endif
         </div>
     </div>
 </div>

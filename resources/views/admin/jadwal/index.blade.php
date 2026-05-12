@@ -100,10 +100,50 @@
                         <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1">Mata Pelajaran</label>
                         <input type="text" name="mapel" class="w-full px-4 py-2.5 bg-neutral-50 dark:bg-surface-900 border border-base rounded-lg text-sm font-semibold outline-none" placeholder="Contoh: Matematika" required>
                     </div>
+                    <div class="col-span-2 space-y-2">
+                        <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1">Guru Pengampu</label>
+                        <input type="text" name="guru" class="w-full px-4 py-2.5 bg-neutral-50 dark:bg-surface-900 border border-base rounded-lg text-sm font-semibold outline-none" placeholder="Nama Guru" required>
+                    </div>
+                    <div class="col-span-2 space-y-2">
+                        <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1">Ruang / Kelas</label>
+                        <input type="text" name="kelas" class="w-full px-4 py-2.5 bg-neutral-50 dark:bg-surface-900 border border-base rounded-lg text-sm font-semibold outline-none" placeholder="Contoh: XII RPL 1" required>
+                    </div>
                 </div>
                 <div class="flex gap-3 pt-4">
                     <button type="button" @click="modal = null" class="flex-1 py-3 text-xs font-bold text-neutral-400 hover:text-neutral-900 transition-colors">Batal</button>
                     <button type="submit" class="flex-1 py-3 bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 rounded-xl text-xs font-bold shadow-lg transition-all active:scale-95">Verifikasi & Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div x-show="modal === 'import'" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center p-6">
+        <div @click="modal = null" class="absolute inset-0 bg-neutral-950/20 backdrop-blur-sm"></div>
+        <div class="relative w-full max-w-md bg-white dark:bg-surface-800 border border-base rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+            <div class="p-6 border-b border-base flex items-center justify-between">
+                <h3 class="font-bold tracking-tight text-navy-900 dark:text-white">Impor Jadwal (CSV)</h3>
+                <button @click="modal = null" class="text-neutral-400 hover:text-neutral-900"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <form action="{{ route('admin.jadwal.import') }}" method="POST" enctype="multipart/form-data" class="p-8 space-y-6">
+                @csrf
+                <div class="space-y-4">
+                    <div class="p-4 bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 rounded-xl">
+                        <p class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase leading-relaxed">
+                            Format CSV: hari, jam_mulai, jam_selesai, mapel, guru, kelas
+                        </p>
+                    </div>
+                    <div class="relative group">
+                        <input type="file" name="file" accept=".csv" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" required>
+                        <div class="border-2 border-dashed border-base rounded-2xl p-8 text-center group-hover:border-navy-400 transition-all">
+                            <i data-lucide="upload-cloud" class="w-8 h-8 mx-auto text-neutral-300 group-hover:text-navy-500 transition-colors mb-2"></i>
+                            <p class="text-xs font-bold text-neutral-500 uppercase tracking-widest">Pilih File CSV</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <button type="button" @click="modal = null" class="flex-1 py-3.5 text-xs font-bold text-neutral-400">Batal</button>
+                    <button type="submit" class="flex-1 py-3.5 bg-navy-950 dark:bg-white text-white dark:text-navy-950 rounded-xl text-xs font-black uppercase tracking-widest shadow-xl active:scale-95">Mulai Impor</button>
                 </div>
             </form>
         </div>

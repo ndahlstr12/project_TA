@@ -452,6 +452,7 @@
                     $groups = [
                         'Menu Utama' => [
                             ['label' => 'Beranda', 'icon' => 'ti-home', 'route' => 'admin.dashboard'],
+                            ['label' => 'Konfigurasi Akademik', 'icon' => 'ti-settings-automation', 'route' => 'admin.settings.index'],
                             ['label' => 'Notifikasi', 'icon' => 'ti-bell', 'route' => 'admin.notifications.index'],
                         ],
                         'Data Master' => [
@@ -563,6 +564,10 @@
         </main>
     </div>
 
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        lucide.createIcons();
+    </script>
     @stack('scripts')
 </body>
 </html>

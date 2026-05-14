@@ -119,14 +119,6 @@
                         </td>
                         <td class="px-8 py-5 text-right">
                             <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                @if(($user->role === 'siswa' || $user->role === 'orangtua') && $user->siswa)
-                                <form action="{{ route('admin.notifications.send-raport', $user->siswa->id) }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="p-2 text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-lg transition-colors" title="Kirim Raport">
-                                        <i data-lucide="send" class="w-4 h-4"></i>
-                                    </button>
-                                </form>
-                                @endif
                                 <a href="{{ route('admin.users.edit', $user->id) }}" class="p-2 text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-white/5 rounded-lg transition-colors">
                                     <i data-lucide="edit-3" class="w-4 h-4"></i>
                                 </a>

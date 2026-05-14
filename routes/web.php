@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\GuruController;
 use App\Http\Controllers\Admin\CbtController;
 use App\Http\Controllers\Admin\JadwalController;
 use App\Http\Controllers\Admin\KelasController;
+use App\Http\Controllers\Admin\SettingController;
 
 use App\Http\Controllers\GuruController as TeacherController;
 use App\Http\Controllers\WaliKelasController;
@@ -21,7 +22,7 @@ use App\Http\Controllers\OrangTuaController;
 
 // Halaman utama dialihkan ke login jika belum masuk
 Route::get('/', function () {
-    return redirect()->route('login');
+    return redirect()->route ('login');
 });
 
 // Autentikasi
@@ -42,6 +43,7 @@ Route::middleware('auth')->group(function() {
 // Route untuk Admin
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/export-pdf', [DashboardController::class, 'exportPDF'])->name('dashboard.export-pdf');
     
     // Separate User Management
     Route::post('/users/import', [UserController::class, 'import'])->name('users.import');
@@ -50,11 +52,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/users/orangtua', [UserController::class, 'indexOrangTua'])->name('users.orangtua');
     Route::resource('users', UserController::class);
 
+    Route::post('/siswas/import', [SiswaController::class, 'import'])->name('siswas.import');
     Route::resource('siswas', SiswaController::class);
     Route::resource('gurus', GuruController::class);
     Route::resource('kelas', KelasController::class);
     Route::resource('kriteria', KriteriaController::class);
-
+    
     // Jadwal
     Route::resource('jadwal', JadwalController::class);
     Route::post('/jadwal/import', [JadwalController::class, 'import'])->name('jadwal.import');
@@ -62,8 +65,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::put('/notifications', [NotificationController::class, 'update'])->name('notifications.update');
-    Route::post('/notifications/send-raport/{siswaId}', [NotificationController::class, 'sendRaport'])->name('notifications.send-raport');
     Route::post('/password-resets/{id}/resolve', [NotificationController::class, 'resolvePasswordReset'])->name('password-resets.resolve');
+
+    // Pengaturan Sistem
+    Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
+    Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
 });
 
 // Route untuk Guru

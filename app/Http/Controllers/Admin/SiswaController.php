@@ -83,4 +83,63 @@ class SiswaController extends Controller
         $siswa->delete();
         return redirect()->route('admin.siswas.index')->with('success', 'Data siswa berhasil dihapus.');
     }
+
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:csv,txt',
+        ]);
+
+        $file = $request->file('file');
+        $handle = fopen($file->getRealPath(), 'r');
+        
+        // Lewati header (NISN, Nama, Kelas, JK)
+        fgetcsv($handle);
+
+        $count = 0;
+        \Illuminate\Support\Facades\DB::beginTransaction();
+        try {
+            while (($data = fgetcsv($handle, 1000, ',')) !== FALSE) {
+                if (count($data) >= 4) {
+                    $nisn = $data[0];
+                    $nama = $data[1];
+                    $kelas = $data[2];
+                    $jk = strtoupper($data[3]); // L/P
+
+                    // 1. Simpan/Update Data Siswa
+                    $siswa = Siswa::updateOrCreate(
+                        ['nisn' => $nisn],
+                        ['nama' => $nama, 'kelas' => $kelas, 'jenis_kelamin' => $jk]
+                    );
+
+                    // 2. Buat/Update Akun Siswa
+                    \App\Models\User::updateOrCreate(
+                        ['siswa_id' => $siswa->id, 'role' => 'siswa'],
+                        [
+                            'name' => $nama,
+                            'password' => \Illuminate\Support\Facades\Hash::make($nisn),
+                        ]
+                    );
+
+                    // 3. Buat/Update Akun Orang Tua
+                    \App\Models\User::updateOrCreate(
+                        ['siswa_id' => $siswa->id, 'role' => 'orangtua'],
+                        [
+                            'name' => 'Orang Tua ' . $nama,
+                            'password' => \Illuminate\Support\Facades\Hash::make('ortu' . $nisn),
+                        ]
+                    );
+
+                    $count++;
+                }
+            }
+            \Illuminate\Support\Facades\DB::commit();
+            fclose($handle);
+            return back()->with('success', "$count data siswa dan akun login berhasil diimport.");
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            fclose($handle);
+            return back()->with('error', 'Gagal mengimport data: ' . $e->getMessage());
+        }
+    }
 }

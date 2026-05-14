@@ -14,7 +14,7 @@
             </div>
             <div>
                 <h1 class="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Halo, {{ explode(' ', Auth::user()->name)[0] }}!</h1>
-                <p class="text-sm text-slate-400 font-medium mt-1">Anda memiliki 3 agenda pengajaran hari ini.</p>
+                <p class="text-sm text-slate-400 font-medium mt-1">Anda memiliki {{ $schedules->count() }} agenda pengajaran terdaftar.</p>
             </div>
         </div>
         <div class="flex gap-4">
@@ -32,7 +32,7 @@
                 <i data-lucide="book-marked" class="w-7 h-7"></i>
             </div>
             <p class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-2">Mata Pelajaran</p>
-            <h3 class="text-3xl font-black tracking-tight text-slate-900 dark:text-white">04 <span class="text-sm font-bold text-slate-300">Kelas</span></h3>
+            <h3 class="text-3xl font-black tracking-tight text-slate-900 dark:text-white">{{ sprintf('%02d', $totalKelas) }} <span class="text-sm font-bold text-slate-300">Kelas</span></h3>
         </div>
 
         <div class="card-soft p-8 group hover:scale-[1.02]">
@@ -40,7 +40,7 @@
                 <i data-lucide="users" class="w-7 h-7"></i>
             </div>
             <p class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-2">Total Siswa</p>
-            <h3 class="text-3xl font-black tracking-tight text-slate-900 dark:text-white">120 <span class="text-sm font-bold text-slate-300">Siswa</span></h3>
+            <h3 class="text-3xl font-black tracking-tight text-slate-900 dark:text-white">{{ $totalSiswa }} <span class="text-sm font-bold text-slate-300">Siswa</span></h3>
         </div>
 
         <div class="card-soft p-8 group hover:scale-[1.02]">
@@ -48,7 +48,7 @@
                 <i data-lucide="timer" class="w-7 h-7"></i>
             </div>
             <p class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-2">Jadwal Aktif</p>
-            <h3 class="text-3xl font-black tracking-tight text-slate-900 dark:text-white">03 <span class="text-sm font-bold text-slate-300">Sesi</span></h3>
+            <h3 class="text-3xl font-black tracking-tight text-slate-900 dark:text-white">{{ sprintf('%02d', $schedules->count()) }} <span class="text-sm font-bold text-slate-300">Sesi</span></h3>
         </div>
     </div>
 
@@ -60,28 +60,24 @@
                 <i data-lucide="calendar" class="w-4 h-4 text-slate-300"></i>
             </div>
             <div class="p-8 space-y-8">
-                @php
-                    $schedules = [
-                        ['time' => '08:00', 'class' => 'X-RPL 1', 'subject' => 'Pemrograman Web', 'status' => 'Selesai'],
-                        ['time' => '10:30', 'class' => 'XI-RPL 2', 'subject' => 'Basis Data', 'status' => 'Berjalan'],
-                        ['time' => '13:00', 'class' => 'XII-RPL 1', 'subject' => 'Proyek Perangkat Lunak', 'status' => 'Mendatang'],
-                    ];
-                @endphp
-                @foreach($schedules as $s)
+                @forelse($schedules as $s)
                 <div class="flex items-center justify-between group cursor-default">
                     <div class="flex items-center gap-6">
-                        <span class="text-xs font-black text-slate-300 group-hover:text-accent-600 transition-colors">{{ $s['time'] }}</span>
+                        <span class="text-xs font-black text-slate-300 group-hover:text-accent-600 transition-colors">{{ $s->jam_mulai }}</span>
                         <div>
-                            <p class="text-sm font-bold text-slate-800 dark:text-slate-200">{{ $s['subject'] }}</p>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">{{ $s['class'] }}</p>
+                            <p class="text-sm font-bold text-slate-800 dark:text-slate-200">{{ $s->mapel }}</p>
+                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">{{ $s->kelas }} | {{ $s->hari }}</p>
                         </div>
                     </div>
-                    <span class="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-tighter 
-                        {{ $s['status'] == 'Selesai' ? 'bg-emerald-50 text-emerald-600' : ($s['status'] == 'Berjalan' ? 'bg-accent-50 text-accent-600 animate-pulse' : 'bg-slate-50 text-slate-400') }}">
-                        {{ $s['status'] }}
+                    <span class="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-tighter bg-slate-50 text-slate-400">
+                        Jadwal
                     </span>
                 </div>
-                @endforeach
+                @empty
+                <div class="text-center py-8">
+                    <p class="text-sm text-slate-400">Belum ada jadwal mengajar.</p>
+                </div>
+                @endforelse
             </div>
         </div>
 

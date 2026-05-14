@@ -13,8 +13,15 @@ class Guru extends Model
         'nip',
         'nama',
         'gelar',
-        'spesialisasi'
+        'spesialisasi',
+        'is_walikelas',
+        'kelas_ampu'
     ];
+
+    public function kelas()
+    {
+        return $this->hasOne(Kelas::class, 'nama_kelas', 'kelas_ampu');
+    }
 
     public function user()
     {

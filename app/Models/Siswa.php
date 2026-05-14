@@ -10,7 +10,6 @@ class Siswa extends Model
         'nisn', 
         'nama', 
         'kelas', 
-        'jenis_kelamin', 
         'nama_ayah', 
         'nama_ibu', 
         'email_orang_tua'

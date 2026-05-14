@@ -12,7 +12,7 @@
     </div>
     @endif
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div class="grid grid-cols-1 gap-8">
         <!-- Password Reset Requests -->
         <div class="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8">
             <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center">
@@ -44,33 +44,6 @@
                 </div>
                 @endforelse
             </div>
-        </div>
-
-        <!-- Notification Config -->
-        <div class="bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 p-8">
-            <h3 class="text-xl font-bold text-slate-800 mb-6 flex items-center">
-                <i class="fas fa-envelope-open-text text-indigo-500 mr-3"></i> Konfigurasi Email
-            </h3>
-            
-            <form action="{{ route('admin.notifications.update') }}" method="POST" class="space-y-6">
-                @csrf
-                @method('PUT')
-                <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2">Subjek Email</label>
-                    <input type="text" name="mail_subject" value="{{ $config['mail_subject'] }}" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition">
-                </div>
-                <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2">Isi Pesan</label>
-                    <textarea name="mail_body" rows="4" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition">{{ $config['mail_body'] }}</textarea>
-                </div>
-                <div class="flex items-center space-x-3">
-                    <input type="checkbox" name="auto_send" {{ $config['auto_send'] ? 'checked' : '' }} class="w-4 h-4 text-indigo-600 rounded">
-                    <span class="text-sm font-medium text-slate-600">Kirim otomatis saat raport diterbitkan</span>
-                </div>
-                <button type="submit" class="w-full bg-slate-800 text-white py-3.5 rounded-xl font-bold hover:bg-slate-900 transition shadow-lg">
-                    Simpan Konfigurasi
-                </button>
-            </form>
         </div>
     </div>
 </div>

@@ -90,9 +90,12 @@
                             </span>
                         </td>
                         <td class="px-8 py-5 text-right">
-                            <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div class="flex items-center justify-end gap-2 transition-opacity">
+                                <a href="{{ route('admin.kriteria.show', $k->id) }}" class="p-2 text-neutral-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 rounded-lg transition-colors">
+                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                </a>
                                 <a href="{{ route('admin.kriteria.edit', $k->id) }}" class="p-2 text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-white/5 rounded-lg transition-colors">
-                                    <i data-lucide="settings-2" class="w-4 h-4"></i>
+                                    <i data-lucide="edit-3" class="w-4 h-4"></i>
                                 </a>
                                 <form action="{{ route('admin.kriteria.destroy', $k->id) }}" method="POST" class="inline" onsubmit="return confirm('Hapus kriteria ini?')">
                                     @csrf @method('DELETE')

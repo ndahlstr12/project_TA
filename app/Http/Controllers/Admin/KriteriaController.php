@@ -39,6 +39,11 @@ class KriteriaController extends Controller
         return view('admin.spk.kriteria.edit', ['kriteria' => $kriterium]);
     }
 
+    public function show(Kriteria $kriterium)
+    {
+        return view('admin.spk.kriteria.show', ['kriteria' => $kriterium]);
+    }
+
     public function update(Request $request, Kriteria $kriterium)
     {
         $validated = $request->validate([

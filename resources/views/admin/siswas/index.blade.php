@@ -13,9 +13,9 @@
             <p class="text-sm text-slate-400 font-medium mt-1">Kelola data akademik dan identitas siswa seluruh angkatan.</p>
         </div>
         <div class="flex gap-3">
-            <button class="px-5 py-3 bg-white dark:bg-surface-800 text-slate-600 dark:text-slate-300 text-[11px] font-bold rounded-2xl shadow-sm border border-slate-100 dark:border-white/5 uppercase tracking-widest flex items-center gap-2">
-                <i data-lucide="download-cloud" class="w-4 h-4"></i>
-                Export
+            <button @click="$refs.importModal.showModal()" class="px-5 py-3 bg-emerald-500 text-white text-[11px] font-bold rounded-2xl shadow-xl shadow-emerald-500/20 uppercase tracking-widest flex items-center gap-2 hover:bg-emerald-600 transition-all">
+                <i data-lucide="upload-cloud" class="w-4 h-4"></i>
+                Import CSV
             </button>
             <a href="{{ route('admin.siswas.create') }}" class="px-6 py-3 bg-accent-600 text-white text-[11px] font-bold rounded-2xl shadow-xl shadow-accent-500/20 uppercase tracking-widest flex items-center gap-2 hover:bg-accent-700 transition-all">
                 <i data-lucide="plus-circle" class="w-4 h-4"></i>
@@ -23,6 +23,55 @@
             </a>
         </div>
     </div>
+
+    <!-- Modal Import -->
+    <dialog x-ref="importModal" class="bg-transparent backdrop:bg-navy-950/50 p-0">
+        <div class="w-[500px] bg-white dark:bg-slate-900 rounded-[2.5rem] overflow-hidden shadow-2xl border border-white dark:border-white/5">
+            <div class="p-8 border-b border-slate-50 dark:border-white/5 flex justify-between items-center bg-slate-50/50 dark:bg-white/5">
+                <div>
+                    <h3 class="text-xl font-extrabold text-slate-900 dark:text-white">Import Data Siswa</h3>
+                    <p class="text-[10px] text-slate-400 mt-1 uppercase tracking-[0.2em] font-black">Format: NISN, Nama, Kelas, JK (L/P)</p>
+                </div>
+                <button @click="$refs.importModal.close()" class="p-3 bg-white dark:bg-surface-800 rounded-2xl text-slate-400 hover:text-rose-500 transition-all">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form action="{{ route('admin.siswas.import') }}" method="POST" enctype="multipart/form-data" class="p-8 space-y-8">
+                @csrf
+                <div class="p-10 border-2 border-dashed border-slate-100 dark:border-white/10 rounded-3xl flex flex-col items-center justify-center bg-slate-50/30 dark:bg-white/5 group hover:border-accent-500 transition-all cursor-pointer relative">
+                    <input type="file" name="file" class="absolute inset-0 opacity-0 cursor-pointer" required>
+                    <div class="w-20 h-20 bg-accent-500/10 text-accent-500 rounded-3xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500">
+                        <i data-lucide="file-spreadsheet" class="w-10 h-10"></i>
+                    </div>
+                    <p class="text-sm font-bold text-slate-900 dark:text-white">Pilih file CSV data siswa</p>
+                    <p class="text-[10px] text-slate-400 mt-2 uppercase font-black tracking-widest">Klik atau seret file ke sini</p>
+                </div>
+                
+                <button type="submit" class="w-full py-5 bg-accent-600 text-white text-[11px] font-bold rounded-2xl shadow-xl shadow-accent-500/20 uppercase tracking-[0.2em] flex items-center justify-center gap-3 hover:bg-accent-700 transition-all">
+                    <i data-lucide="check-circle" class="w-4 h-4"></i>
+                    Mulai Sinkronisasi
+                </button>
+            </form>
+        </div>
+    </dialog>
+
+    @if(session('success'))
+    <div class="p-5 bg-emerald-500/10 border border-emerald-500/20 rounded-3xl flex items-center gap-4">
+        <div class="w-10 h-10 rounded-2xl bg-emerald-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
+            <i data-lucide="check" class="w-5 h-5"></i>
+        </div>
+        <p class="text-xs font-bold text-emerald-600 tracking-tight">{{ session('success') }}</p>
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="p-5 bg-rose-500/10 border border-rose-500/20 rounded-3xl flex items-center gap-4">
+        <div class="w-10 h-10 rounded-2xl bg-rose-500 flex items-center justify-center text-white shadow-lg shadow-rose-500/20">
+            <i data-lucide="alert-circle" class="w-5 h-5"></i>
+        </div>
+        <p class="text-xs font-bold text-rose-600 tracking-tight">{{ session('error') }}</p>
+    </div>
+    @endif
 
     <!-- Data Surface -->
     <div class="card-soft overflow-hidden">

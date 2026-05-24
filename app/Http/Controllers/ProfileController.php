@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 
 class ProfileController extends Controller
@@ -23,13 +24,26 @@ class ProfileController extends Controller
             'username' => ['nullable', 'string', 'max:255', 'unique:users,username,' . $user->id],
             'email' => ['nullable', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
             'email_orang_tua' => ['nullable', 'email', 'max:255'],
+            'foto' => ['nullable', 'image', 'mimes:jpeg,png,jpg,gif', 'max:2048'],
         ]);
 
-        $user->update([
+        $data = [
             'name' => $validated['name'],
             'username' => $validated['username'],
             'email' => $validated['email'],
-        ]);
+        ];
+
+        if ($request->hasFile('foto')) {
+            // Hapus foto lama jika ada
+            if ($user->foto) {
+                Storage::disk('public')->delete($user->foto);
+            }
+            
+            $path = $request->file('foto')->store('profile-photos', 'public');
+            $data['foto'] = $path;
+        }
+
+        $user->update($data);
 
         // Jika user adalah siswa atau orang tua, update email ortu di tabel siswas
         if (($user->role === 'siswa' || $user->role === 'orangtua') && $user->siswa) {
@@ -56,6 +70,7 @@ class ProfileController extends Controller
         ]);
 
         $user->password = $request->password;
+        $user->must_change_password = false;
         $user->save();
 
         return back()->with('success', 'Kata sandi berhasil diperbarui.');

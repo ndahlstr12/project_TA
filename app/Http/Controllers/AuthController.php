@@ -68,6 +68,7 @@ class AuthController extends Controller
     protected function authenticated(Request $request, $user)
     {
         $request->session()->regenerate();
+
         $routes = [
             'admin' => 'admin/dashboard',
             'guru' => 'teacher/dashboard',

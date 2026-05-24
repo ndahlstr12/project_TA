@@ -4,103 +4,227 @@
 @section('page_title', 'Ringkasan Aktivitas')
 
 @section('content')
-<div class="space-y-12">
+<div class="space-y-8">
     
-    <!-- Soft Header -->
-    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-8 bg-white/40 dark:bg-white/5 p-10 rounded-[2.5rem] border border-white dark:border-white/5 backdrop-blur-md">
-        <div class="flex items-center gap-6">
-            <div class="w-20 h-20 bg-accent-100 dark:bg-accent-600/20 rounded-3xl flex items-center justify-center text-accent-600">
-                <i data-lucide="sparkles" class="w-10 h-10"></i>
-            </div>
-            <div>
-                <h1 class="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Halo, {{ explode(' ', Auth::user()->name)[0] }}!</h1>
-                <p class="text-sm text-slate-400 font-medium mt-1">Anda memiliki {{ $schedules->count() }} agenda pengajaran terdaftar.</p>
-            </div>
+    <!-- Pro Header (Sama dengan Admin) -->
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-base pb-8">
+        <div>
+            <h1 class="text-3xl font-bold tracking-tighter text-slate-900 dark:text-white">Dashboard Guru</h1>
+            <p class="text-sm text-neutral-500 mt-2">Selamat datang kembali, {{ Auth::user()->name }}. Kelola agenda pengajaran Anda.</p>
         </div>
-        <div class="flex gap-4">
-            <button class="px-6 py-4 bg-white dark:bg-surface-800 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-2xl shadow-sm border border-slate-100 dark:border-white/5 transition-all hover:shadow-md hover:scale-105 uppercase tracking-widest flex items-center gap-2">
-                <i data-lucide="download" class="w-4 h-4"></i>
+        <div class="flex gap-3">
+            <button class="px-4 py-2 text-xs font-bold border border-base rounded-lg hover:bg-neutral-50 dark:hover:bg-white/5 transition-all flex items-center gap-2">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
                 Rekap Nilai
             </button>
         </div>
     </div>
 
-    <!-- Stats Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="card-soft p-8 group hover:scale-[1.02]">
-            <div class="w-14 h-14 rounded-2xl bg-accent-50 dark:bg-accent-600/10 flex items-center justify-center text-accent-600 mb-6 group-hover:bg-accent-600 group-hover:text-white transition-all duration-500">
-                <i data-lucide="book-marked" class="w-7 h-7"></i>
+    <!-- Data Surface (Tabel High-Density Seperti Admin) -->
+    <div class="card-pro overflow-hidden">
+        <!-- Control Bar -->
+        <div class="p-4 border-b border-base bg-neutral-50/30 dark:bg-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <h3 class="text-[10px] font-black uppercase tracking-[0.2em] text-neutral-400">Agenda Pengajaran Terdaftar</h3>
             </div>
-            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-2">Mata Pelajaran</p>
-            <h3 class="text-3xl font-black tracking-tight text-slate-900 dark:text-white">{{ sprintf('%02d', $totalKelas) }} <span class="text-sm font-bold text-slate-300">Kelas</span></h3>
+            
+            <div class="flex items-center bg-white dark:bg-surface-900 border border-base rounded-lg px-3 py-1.5 gap-2 focus-within:ring-2 focus-within:ring-accent/10 transition-all">
+                <i data-lucide="search" class="w-3.5 h-3.5 text-neutral-400"></i>
+                <input type="text" placeholder="Cari jadwal atau kelas..." class="bg-transparent border-none focus:ring-0 text-xs font-medium w-48">
+            </div>
         </div>
 
-        <div class="card-soft p-8 group hover:scale-[1.02]">
-            <div class="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-600/10 flex items-center justify-center text-emerald-600 mb-6 group-hover:bg-emerald-600 group-hover:text-white transition-all duration-500">
-                <i data-lucide="users" class="w-7 h-7"></i>
-            </div>
-            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-2">Total Siswa</p>
-            <h3 class="text-3xl font-black tracking-tight text-slate-900 dark:text-white">{{ $totalSiswa }} <span class="text-sm font-bold text-slate-300">Siswa</span></h3>
-        </div>
-
-        <div class="card-soft p-8 group hover:scale-[1.02]">
-            <div class="w-14 h-14 rounded-2xl bg-amber-50 dark:bg-amber-600/10 flex items-center justify-center text-amber-600 mb-6 group-hover:bg-amber-600 group-hover:text-white transition-all duration-500">
-                <i data-lucide="timer" class="w-7 h-7"></i>
-            </div>
-            <p class="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-2">Jadwal Aktif</p>
-            <h3 class="text-3xl font-black tracking-tight text-slate-900 dark:text-white">{{ sprintf('%02d', $schedules->count()) }} <span class="text-sm font-bold text-slate-300">Sesi</span></h3>
+        <!-- High-Density Registry Table -->
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-neutral-50/30 dark:bg-white/5 border-b border-base text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
+                        <th class="px-8 py-4">Waktu & Sesi</th>
+                        <th class="px-8 py-4">Mata Pelajaran</th>
+                        <th class="px-8 py-4">Lokasi / Kelas</th>
+                        <th class="px-8 py-4">Hari</th>
+                        <th class="px-8 py-4 text-right">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-base">
+                    @forelse($schedules as $s)
+                    <tr class="hover:bg-neutral-50/30 dark:hover:bg-white/5 transition-colors group">
+                        <td class="px-8 py-5">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-neutral-100 dark:bg-white/5 border border-base flex items-center justify-center text-neutral-500">
+                                    <i data-lucide="clock" class="w-3.5 h-3.5"></i>
+                                </div>
+                                <div class="flex flex-col">
+                                    <span class="text-xs font-mono font-bold text-slate-600 dark:text-slate-300">{{ $s->jam_mulai }} - {{ $s->jam_selesai }}</span>
+                                    <span class="text-[9px] text-neutral-400 uppercase font-black">WIB</span>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="px-8 py-5">
+                            <p class="text-sm font-bold text-neutral-800 dark:text-neutral-200 tracking-tight">{{ $s->mapel }}</p>
+                            <p class="text-[9px] text-neutral-400 font-medium uppercase tracking-widest mt-0.5">Kurikulum Nasional</p>
+                        </td>
+                        <td class="px-8 py-5">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-tighter border bg-blue-500/5 text-blue-500 border-blue-500/10">
+                                {{ $s->kelas }}
+                            </span>
+                        </td>
+                        <td class="px-8 py-5 text-xs font-bold text-neutral-600 dark:text-neutral-400">
+                            {{ $s->hari }}
+                        </td>
+                        <td class="px-8 py-5 text-right">
+                            <span class="inline-flex items-center gap-1 w-2 h-2 rounded-full bg-emerald-500"></span>
+                            <span class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest ml-1">Aktif</span>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" class="px-8 py-20 text-center">
+                            <div class="flex flex-col items-center gap-3 opacity-20">
+                                <i data-lucide="calendar-x" class="w-10 h-10"></i>
+                                <p class="text-xs font-bold uppercase tracking-[0.2em]">Belum ada jadwal mengajar</p>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <!-- Main Section -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        <div class="card-soft overflow-hidden">
-            <div class="p-8 border-b border-slate-50 dark:border-white/5 flex items-center justify-between bg-white/50 dark:bg-white/5">
-                <h3 class="text-sm font-bold uppercase tracking-widest text-slate-900 dark:text-white">Aktivitas Mengajar</h3>
-                <i data-lucide="calendar" class="w-4 h-4 text-slate-300"></i>
-            </div>
-            <div class="p-8 space-y-8">
-                @forelse($schedules as $s)
-                <div class="flex items-center justify-between group cursor-default">
-                    <div class="flex items-center gap-6">
-                        <span class="text-xs font-black text-slate-300 group-hover:text-accent-600 transition-colors">{{ $s->jam_mulai }}</span>
-                        <div>
-                            <p class="text-sm font-bold text-slate-800 dark:text-slate-200">{{ $s->mapel }}</p>
-                            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">{{ $s->kelas }} | {{ $s->hari }}</p>
-                        </div>
-                    </div>
-                    <span class="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-tighter bg-slate-50 text-slate-400">
-                        Jadwal
-                    </span>
-                </div>
-                @empty
-                <div class="text-center py-8">
-                    <p class="text-sm text-slate-400">Belum ada jadwal mengajar.</p>
-                </div>
-                @endforelse
+    <!-- Student & Class Management Section -->
+    <div x-data="{ tab: '{{ $isWaliKelas ? 'perwalian' : 'kelas' }}' }" class="space-y-6">
+        <div class="flex items-center justify-between border-b border-base">
+            <div class="flex gap-8">
+                @if($isWaliKelas)
+                <button @click="tab = 'perwalian'" :class="tab === 'perwalian' ? 'border-b-2 border-neutral-900 dark:border-white text-neutral-900 dark:white' : 'text-neutral-400'" class="pb-4 text-[11px] font-black uppercase tracking-widest transition-all">
+                    Siswa Perwalian (Kelas {{ $namaKelasWali }})
+                </button>
+                @endif
+                <button @click="tab = 'kelas'" :class="tab === 'kelas' ? 'border-b-2 border-neutral-900 dark:border-white text-neutral-900 dark:white' : 'text-neutral-400'" class="pb-4 text-[11px] font-black uppercase tracking-widest transition-all">
+                    Data Kelas
+                </button>
+                <button @click="tab = 'diajar'" :class="tab === 'diajar' ? 'border-b-2 border-neutral-900 dark:border-white text-neutral-900 dark:white' : 'text-neutral-400'" class="pb-4 text-[11px] font-black uppercase tracking-widest transition-all">
+                    Nama Siswa
+                </button>
             </div>
         </div>
 
-        <div class="space-y-10">
-            <div class="card-soft p-10 bg-gradient-to-br from-accent-600 to-indigo-700 text-white border-none relative overflow-hidden">
-                <div class="absolute -right-10 -bottom-10 opacity-10">
-                    <i data-lucide="info" class="w-64 h-64"></i>
+        <!-- Perwalian Table -->
+        @if($isWaliKelas)
+        <div x-show="tab === 'perwalian'" class="card-pro overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-neutral-50/30 dark:bg-white/5 border-b border-base text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
+                            <th class="px-8 py-4">Profil Siswa</th>
+                            <th class="px-8 py-4">NISN</th>
+                            <th class="px-8 py-4">Jenis Kelamin</th>
+                            <th class="px-8 py-4 text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-base">
+                        @forelse($waliKelasSiswa as $siswa)
+                        <tr class="hover:bg-neutral-50/30 dark:hover:bg-white/5 transition-colors group">
+                            <td class="px-8 py-5">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-white/5 border border-base flex items-center justify-center overflow-hidden shrink-0">
+                                        <img src="https://ui-avatars.com/api/?name={{ urlencode($siswa->nama) }}&background=f5f5f5&color=0a0a0a" class="w-full h-full grayscale">
+                                    </div>
+                                    <p class="text-sm font-bold text-neutral-800 dark:text-neutral-200 tracking-tight">{{ $siswa->nama }}</p>
+                                </div>
+                            </td>
+                            <td class="px-8 py-5 text-xs font-mono font-bold text-neutral-500">{{ $siswa->nisn }}</td>
+                            <td class="px-8 py-5">
+                                <span class="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-tighter border {{ $siswa->jenis_kelamin == 'L' ? 'bg-blue-500/5 text-blue-500 border-blue-500/10' : 'bg-rose-500/5 text-rose-500 border-rose-500/10' }}">
+                                    {{ $siswa->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan' }}
+                                </span>
+                            </td>
+                            <td class="px-8 py-5 text-right">
+                                <button class="p-2 text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-white/5 rounded-lg transition-colors">
+                                    <i data-lucide="eye" class="w-4 h-4"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="4" class="px-8 py-10 text-center text-xs text-neutral-400 italic">Tidak ada siswa di kelas perwalian ini.</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        @endif
+
+        <!-- Data Kelas Tab -->
+        <div x-show="tab === 'kelas'" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            @forelse($kelasSummary as $kelas)
+            <div class="card-pro p-6 hover:border-neutral-900 dark:hover:border-white transition-all group">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="w-12 h-12 rounded-xl bg-neutral-100 dark:bg-white/5 border border-base flex items-center justify-center text-neutral-500 group-hover:bg-neutral-900 group-hover:text-white dark:group-hover:bg-white dark:group-hover:text-neutral-900 transition-colors">
+                        <i data-lucide="layout" class="w-6 h-6"></i>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-tighter border bg-blue-500/5 text-blue-500 border-blue-500/10">
+                        {{ $kelas['jumlah_siswa'] }} Siswa
+                    </span>
                 </div>
-                <div class="relative z-10">
-                    <h4 class="text-xl font-extrabold tracking-tight mb-4">Informasi Penting</h4>
-                    <p class="text-sm text-accent-50 leading-relaxed mb-8">Pemasukan nilai raport untuk penilaian tengah semester (PTS) akan ditutup pada hari Jumat ini pukul 23:59 WIB.</p>
-                    <button class="px-6 py-3 bg-white text-accent-600 text-[10px] font-bold rounded-xl uppercase tracking-widest shadow-lg shadow-black/10 transition-all hover:scale-105">Lihat Pengumuman</button>
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white tracking-tight">{{ $kelas['nama_kelas'] }}</h3>
+                <p class="text-xs text-neutral-500 mt-1">Kelas yang Anda ampu untuk mata pelajaran terkait.</p>
+                <div class="mt-6 pt-6 border-t border-base flex justify-between items-center">
+                    <button @click="tab = 'diajar'" class="text-[10px] font-black uppercase tracking-widest text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">Lihat Detail Siswa</button>
+                    <i data-lucide="arrow-right" class="w-4 h-4 text-neutral-300 group-hover:text-neutral-900 dark:group-hover:text-white transition-colors"></i>
                 </div>
             </div>
+            @empty
+            <div class="col-span-full py-20 text-center card-pro opacity-50">
+                <p class="text-xs font-bold uppercase tracking-widest">Belum ada data kelas</p>
+            </div>
+            @endforelse
+        </div>
 
-            <div class="card-soft p-8">
-                <div class="flex items-center gap-4 mb-6">
-                    <div class="w-10 h-10 rounded-xl bg-slate-50 dark:bg-white/5 flex items-center justify-center text-slate-400">
-                        <i data-lucide="help-circle" class="w-5 h-5"></i>
-                    </div>
-                    <h4 class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Pusat Bantuan</h4>
-                </div>
-                <p class="text-xs text-slate-500 leading-relaxed">Butuh bantuan terkait penggunaan sistem? Hubungi Tim IT Support SMKN 1 Sungailiat melalui Telegram.</p>
+        <!-- Diajar Table (Nama Siswa) -->
+        <div x-show="tab === 'diajar'" class="card-pro overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-left">
+                    <thead>
+                        <tr class="bg-neutral-50/30 dark:bg-white/5 border-b border-base text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
+                            <th class="px-8 py-4">Profil Siswa</th>
+                            <th class="px-8 py-4">Kelas</th>
+                            <th class="px-8 py-4">NISN</th>
+                            <th class="px-8 py-4 text-right">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-base">
+                        @forelse($studentsInClasses as $siswa)
+                        <tr class="hover:bg-neutral-50/30 dark:hover:bg-white/5 transition-colors group">
+                            <td class="px-8 py-5">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-xl bg-neutral-100 dark:bg-white/5 border border-base flex items-center justify-center overflow-hidden shrink-0">
+                                        <img src="https://ui-avatars.com/api/?name={{ urlencode($siswa->nama) }}&background=f5f5f5&color=0a0a0a" class="w-full h-full grayscale">
+                                    </div>
+                                    <p class="text-sm font-bold text-neutral-800 dark:text-neutral-200 tracking-tight">{{ $siswa->nama }}</p>
+                                </div>
+                            </td>
+                            <td class="px-8 py-5">
+                                <span class="px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-tighter border bg-neutral-500/5 text-neutral-500 border-neutral-500/10">
+                                    {{ $siswa->kelas }}
+                                </span>
+                            </td>
+                            <td class="px-8 py-5 text-xs font-mono font-bold text-neutral-500">{{ $siswa->nisn }}</td>
+                            <td class="px-8 py-5 text-right">
+                                <button class="p-2 text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-white/5 rounded-lg transition-colors">
+                                    <i data-lucide="info" class="w-4 h-4"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="4" class="px-8 py-10 text-center text-xs text-neutral-400 italic">Tidak ada siswa di kelas yang Anda ajar.</td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

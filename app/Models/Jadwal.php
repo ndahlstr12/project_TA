@@ -13,8 +13,23 @@ class Jadwal extends Model
         'hari',
         'jam_mulai',
         'jam_selesai',
-        'mapel',
-        'guru',
-        'kelas'
+        'guru_id',
+        'mapel_id',
+        'kelas_id'
     ];
+
+    public function guru()
+    {
+        return $this->belongsTo(Guru::class);
+    }
+
+    public function mapel()
+    {
+        return $this->belongsTo(Mapel::class);
+    }
+
+    public function kelas()
+    {
+        return $this->belongsTo(Kelas::class);
+    }
 }

@@ -8,15 +8,34 @@ use Illuminate\Http\Request;
 
 class SiswaController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $siswas = Siswa::latest()->paginate(10);
-        return view('admin.siswas.index', compact('siswas'));
+        $search = $request->query('search');
+        $kelasFilter = $request->query('kelas_id');
+        
+        $query = Siswa::with('kelas');
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                  ->orWhere('nisn', 'like', "%{$search}%");
+            });
+        }
+
+        if ($kelasFilter) {
+            $query->where('kelas_id', $kelasFilter);
+        }
+
+        $siswas = $query->latest()->paginate(10)->withQueryString();
+        $kelasList = \App\Models\Kelas::orderBy('nama_kelas')->get();
+        
+        return view('admin.siswas.index', compact('siswas', 'kelasList'));
     }
 
     public function create()
     {
-        return view('admin.siswas.create');
+        $kelas = \App\Models\Kelas::orderBy('nama_kelas')->get();
+        return view('admin.siswas.create', compact('kelas'));
     }
 
     public function store(Request $request)
@@ -24,7 +43,7 @@ class SiswaController extends Controller
         $validated = $request->validate([
             'nisn' => 'required|string|unique:siswas,nisn|size:10',
             'nama' => 'required|string|max:255',
-            'kelas' => 'required|string|max:50',
+            'kelas_id' => 'required|exists:kelas,id',
             'jenis_kelamin' => 'required|in:L,P',
         ]);
 
@@ -61,7 +80,8 @@ class SiswaController extends Controller
 
     public function edit(Siswa $siswa)
     {
-        return view('admin.siswas.edit', compact('siswa'));
+        $kelas = \App\Models\Kelas::orderBy('nama_kelas')->get();
+        return view('admin.siswas.edit', compact('siswa', 'kelas'));
     }
 
     public function update(Request $request, Siswa $siswa)
@@ -69,7 +89,7 @@ class SiswaController extends Controller
         $validated = $request->validate([
             'nisn' => 'required|string|size:10|unique:siswas,nisn,' . $siswa->id,
             'nama' => 'required|string|max:255',
-            'kelas' => 'required|string|max:50',
+            'kelas_id' => 'required|exists:kelas,id',
             'jenis_kelamin' => 'required|in:L,P',
         ]);
 
@@ -91,44 +111,62 @@ class SiswaController extends Controller
         ]);
 
         $file = $request->file('file');
-        $handle = fopen($file->getRealPath(), 'r');
+        $filePath = $file->getRealPath();
         
-        // Lewati header (NISN, Nama, Kelas, JK)
-        fgetcsv($handle);
+        $firstLine = file_get_contents($filePath, false, null, 0, 1000);
+        $delimiter = (strpos($firstLine, ';') !== false) ? ';' : ',';
+
+        // OPTIMASI: Ambil semua kelas sekaligus
+        $kelasMap = \App\Models\Kelas::pluck('id', 'nama_kelas')->all();
+        
+        // OPTIMASI: Ambil semua ID siswa yang sudah punya akun
+        $existingStudentAccounts = \App\Models\User::where('role', 'siswa')->whereNotNull('siswa_id')->pluck('siswa_id', 'siswa_id')->all();
+        $existingParentAccounts = \App\Models\User::where('role', 'orangtua')->whereNotNull('siswa_id')->pluck('siswa_id', 'siswa_id')->all();
+
+        $handle = fopen($filePath, 'r');
+        fgetcsv($handle, 1000, $delimiter); // Skip header
 
         $count = 0;
         \Illuminate\Support\Facades\DB::beginTransaction();
         try {
-            while (($data = fgetcsv($handle, 1000, ',')) !== FALSE) {
-                if (count($data) >= 4) {
-                    $nisn = $data[0];
-                    $nama = $data[1];
-                    $kelas = $data[2];
-                    $jk = strtoupper($data[3]); // L/P
+            while (($data = fgetcsv($handle, 1000, $delimiter)) !== FALSE) {
+                if (count($data) >= 2) {
+                    $nisn = trim($data[0]);
+                    $nama = trim($data[1]);
+                    $namaKelas = isset($data[2]) ? trim($data[2]) : null;
+
+                    if (empty($nisn) || empty($nama)) continue;
+
+                    // Lookup Kelas dari memori (sangat cepat)
+                    $kelasId = $kelasMap[$namaKelas] ?? null;
 
                     // 1. Simpan/Update Data Siswa
                     $siswa = Siswa::updateOrCreate(
                         ['nisn' => $nisn],
-                        ['nama' => $nama, 'kelas' => $kelas, 'jenis_kelamin' => $jk]
+                        ['nama' => $nama, 'kelas_id' => $kelasId]
                     );
 
-                    // 2. Buat/Update Akun Siswa
-                    \App\Models\User::updateOrCreate(
-                        ['siswa_id' => $siswa->id, 'role' => 'siswa'],
-                        [
+                    // 2. Akun Siswa (Cek dari memori)
+                    if (!isset($existingStudentAccounts[$siswa->id])) {
+                        \App\Models\User::create([
+                            'siswa_id' => $siswa->id,
+                            'role' => 'siswa',
                             'name' => $nama,
                             'password' => \Illuminate\Support\Facades\Hash::make($nisn),
-                        ]
-                    );
+                        ]);
+                        $existingStudentAccounts[$siswa->id] = $siswa->id;
+                    }
 
-                    // 3. Buat/Update Akun Orang Tua
-                    \App\Models\User::updateOrCreate(
-                        ['siswa_id' => $siswa->id, 'role' => 'orangtua'],
-                        [
+                    // 3. Akun Orang Tua (Cek dari memori)
+                    if (!isset($existingParentAccounts[$siswa->id])) {
+                        \App\Models\User::create([
+                            'siswa_id' => $siswa->id,
+                            'role' => 'orangtua',
                             'name' => 'Orang Tua ' . $nama,
                             'password' => \Illuminate\Support\Facades\Hash::make('ortu' . $nisn),
-                        ]
-                    );
+                        ]);
+                        $existingParentAccounts[$siswa->id] = $siswa->id;
+                    }
 
                     $count++;
                 }
@@ -138,7 +176,7 @@ class SiswaController extends Controller
             return back()->with('success', "$count data siswa dan akun login berhasil diimport.");
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\DB::rollBack();
-            fclose($handle);
+            if (isset($handle)) fclose($handle);
             return back()->with('error', 'Gagal mengimport data: ' . $e->getMessage());
         }
     }

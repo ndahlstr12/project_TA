@@ -8,9 +8,19 @@ use Illuminate\Http\Request;
 
 class GuruController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $gurus = Guru::latest()->paginate(10);
+        $search = $request->query('search');
+        $query = Guru::query();
+
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                  ->orWhere('nip', 'like', "%{$search}%");
+            });
+        }
+
+        $gurus = $query->latest()->paginate(10)->withQueryString();
         return view('admin.gurus.index', compact('gurus'));
     }
 

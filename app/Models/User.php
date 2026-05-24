@@ -17,7 +17,9 @@ class User extends Authenticatable
         'password',
         'role',
         'siswa_id',
-        'guru_id'
+        'guru_id',
+        'must_change_password',
+        'foto'
     ];
 
     public function passwordResetRequests()
@@ -46,6 +48,11 @@ class User extends Authenticatable
         return $this->belongsTo(Guru::class, 'guru_id');
     }
 
+    public function orangTua()
+    {
+        return $this->hasOne(OrangTua::class);
+    }
+
     public function hasRole(string $role): bool
     {
         return $this->role === $role;
@@ -56,6 +63,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'must_change_password' => 'boolean',
         ];
     }
 }

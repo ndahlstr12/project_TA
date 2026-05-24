@@ -3,20 +3,45 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class Siswa extends Model
 {
     protected $fillable = [
         'nisn', 
         'nama', 
-        'kelas', 
+        'orang_tua_id', 
+        'kelas_id', 
+        'jenis_kelamin',
         'nama_ayah', 
         'nama_ibu', 
         'email_orang_tua'
     ];
 
-    public function orangtua()
+    public function user(): HasOne
     {
-        return $this->hasMany(User::class, 'siswa_id')->where('role', 'orangtua');
+        return $this->hasOne(User::class);
+    }
+
+    public function orangTua(): BelongsTo
+    {
+        return $this->belongsTo(OrangTua::class, 'orang_tua_id');
+    }
+
+    public function kelas(): BelongsTo
+    {
+        return $this->belongsTo(Kelas::class, 'kelas_id');
+    }
+
+    public function raports(): HasMany
+    {
+        return $this->hasMany(Raport::class);
+    }
+
+    public function rankings(): HasMany
+    {
+        return $this->hasMany(SpkRanking::class);
     }
 }

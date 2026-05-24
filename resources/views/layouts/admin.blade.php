@@ -449,27 +449,46 @@
             <!-- Nav -->
             <nav class="nav-scroll">
                 @php
-                    $groups = [
-                        'Menu Utama' => [
-                            ['label' => 'Beranda', 'icon' => 'ti-home', 'route' => 'admin.dashboard'],
-                            ['label' => 'Konfigurasi Akademik', 'icon' => 'ti-settings-automation', 'route' => 'admin.settings.index'],
-                            ['label' => 'Notifikasi', 'icon' => 'ti-bell', 'route' => 'admin.notifications.index'],
-                        ],
-                        'Data Master' => [
-                            ['label' => 'Manajemen Kelas', 'icon' => 'ti-category', 'route' => 'admin.kelas.index'],
-                            ['label' => 'Manajemen User', 'icon' => 'ti-shield-check', 'route' => 'admin.users.index'],
-                        ],
-                        'Akademik' => [
-                            ['label' => 'Jadwal Pelajaran', 'icon' => 'ti-calendar-event', 'route' => 'admin.jadwal.index'],
-                            ['label' => 'Kriteria SPK', 'icon' => 'ti-list-check', 'route' => 'admin.kriteria.index'],
-                        ]
+                    $role = Auth::user()->role;
+                    $homeRoute = $role . '.dashboard';
+                    
+                    $menuItems = [
+                        ['label' => 'Beranda', 'icon' => 'ti-home', 'route' => $homeRoute],
                     ];
+
+                    if ($role === 'admin') {
+                        $menuItems = array_merge($menuItems, [
+                            ['label' => 'Konfigurasi Akademik', 'icon' => 'ti-settings-automation', 'route' => 'admin.settings.index', 'group' => 'Menu Utama'],
+                            ['label' => 'Notifikasi', 'icon' => 'ti-bell', 'route' => 'admin.notifications.index', 'group' => 'Menu Utama'],
+                            ['label' => 'Manajemen Kelas', 'icon' => 'ti-category', 'route' => 'admin.kelas.index', 'group' => 'Data Master'],
+                            ['label' => 'Manajemen User', 'icon' => 'ti-shield-check', 'route' => 'admin.users.index', 'group' => 'Data Master'],
+                            ['label' => 'Jadwal Pelajaran', 'icon' => 'ti-calendar-event', 'route' => 'admin.jadwal.index', 'group' => 'Akademik'],
+                            ['label' => 'Kriteria SPK', 'icon' => 'ti-list-check', 'route' => 'admin.kriteria.index', 'group' => 'Akademik'],
+                        ]);
+                    } elseif ($role === 'guru' || $role === 'walikelas') {
+                        $menuItems = array_merge($menuItems, [
+                            ['label' => 'Input Kehadiran', 'icon' => 'ti-user-check', 'route' => 'guru.kehadiran.index', 'group' => 'Akademik'],
+                            ['label' => 'Manajemen Nilai', 'icon' => 'ti-book-2', 'route' => 'guru.nilai.index', 'group' => 'Akademik'],
+                        ]);
+                        
+                        if ($role === 'walikelas') {
+                            $menuItems[] = ['label' => 'Jurnal Perilaku', 'icon' => 'ti-notebook', 'route' => 'walikelas.jurnal.index', 'group' => 'Akademik'];
+                            $menuItems[] = ['label' => 'Manajemen Raport', 'icon' => 'ti-file-certificate', 'route' => 'walikelas.raport.index', 'group' => 'Akademik'];
+                            $menuItems[] = ['label' => 'Ranking Siswa', 'icon' => 'ti-award', 'route' => 'walikelas.ranking.index', 'group' => 'Akademik'];
+                        }
+                    }
+                    
+                    // Grouping logic
+                    $groupedMenu = ['Menu Utama' => []];
+                    foreach($menuItems as $item) {
+                        $group = $item['group'] ?? 'Menu Utama';
+                        $groupedMenu[$group][] = $item;
+                    }
                 @endphp
 
-                @foreach($groups as $title => $items)
-                @if($title)
+                @foreach($groupedMenu as $title => $items)
+                @if(count($items) > 0)
                 <div class="nav-section-label @if(!$loop->first) mt-2 @endif">{{ $title }}</div>
-                @endif
                 @foreach($items as $item)
                 <a href="{{ Route::has($item['route']) ? route($item['route']) : '#' }}" 
                    class="nav-item {{ request()->routeIs($item['route']) ? 'active' : '' }}">
@@ -478,16 +497,21 @@
                     <span class="tooltip">{{ $item['label'] }}</span>
                 </a>
                 @endforeach
+                @endif
                 @endforeach
             </nav>
 
             <!-- Footer / User -->
             <div class="sidebar-footer">
                 <div class="user-card" x-data="{ open: false }" @click="open = !open">
-                    <div class="avatar">{{ substr(Auth::user()->name, 0, 2) }}</div>
+                    @if(Auth::user()->foto)
+                        <img src="{{ asset('storage/' . Auth::user()->foto) }}" class="w-9 h-9 rounded-full object-cover flex-shrink-0">
+                    @else
+                        <div class="avatar">{{ substr(Auth::user()->name, 0, 2) }}</div>
+                    @endif
                     <div class="user-info">
                         <div class="user-name">{{ Auth::user()->name }}</div>
-                        <div class="user-role">Admin Sistem</div>
+                        <div class="user-role">{{ str_replace('_', ' ', strtoupper(Auth::user()->role)) }}</div>
                     </div>
 
                     <!-- Dropdown for Logout/Profile -->
@@ -523,6 +547,42 @@
             </div>
             
             <div class="flex items-center gap-4">
+                <!-- Notifications -->
+                <div class="relative" x-data="{ notifOpen: false }">
+                    <button @click="notifOpen = !notifOpen" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-blue-500 transition-colors relative">
+                        <i class="ti ti-bell text-xl"></i>
+                        @if(isset($unreadNotificationsCount) && $unreadNotificationsCount > 0)
+                        <span class="absolute top-2 right-2 w-4 h-4 bg-rose-500 text-white text-[9px] font-black flex items-center justify-center rounded-full border-2 border-white dark:border-[#0f172a]">
+                            {{ $unreadNotificationsCount }}
+                        </span>
+                        @endif
+                    </button>
+
+                    <div x-show="notifOpen" @click.away="notifOpen = false" x-cloak x-transition class="absolute right-0 mt-3 w-80 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl shadow-2xl overflow-hidden z-50">
+                        <div class="p-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
+                            <h4 class="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">Notifikasi</h4>
+                            <span class="px-2 py-0.5 bg-blue-500/10 text-blue-500 text-[9px] font-bold rounded-full">{{ $unreadNotificationsCount ?? 0 }} Baru</span>
+                        </div>
+                        <div class="max-h-96 overflow-y-auto custom-scrollbar">
+                            @forelse($latestNotifications ?? [] as $notif)
+                            <div class="p-4 border-b border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                                <p class="text-[10px] font-bold text-slate-900 dark:text-white">{{ $notif->title }}</p>
+                                <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">{{ $notif->message }}</p>
+                                <p class="text-[8px] font-bold text-slate-400 uppercase mt-2 tracking-tighter">{{ $notif->created_at->diffForHumans() }}</p>
+                            </div>
+                            @empty
+                            <div class="p-10 text-center opacity-30">
+                                <i class="ti ti-bell-off text-3xl mb-2"></i>
+                                <p class="text-[10px] font-bold uppercase tracking-widest">Tidak ada notifikasi</p>
+                            </div>
+                            @endforelse
+                        </div>
+                        @if(isset($latestNotifications) && $latestNotifications->count() > 0)
+                        <a href="#" class="block p-3 text-center text-[10px] font-bold text-blue-500 uppercase tracking-widest bg-slate-50/50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 transition-all">Lihat Semua</a>
+                        @endif
+                    </div>
+                </div>
+
                 <button @click="toggleDarkMode()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-blue-500 transition-colors">
                     <i x-show="!darkMode" class="ti ti-moon text-xl"></i>
                     <i x-show="darkMode" class="ti ti-sun text-xl"></i>
@@ -532,11 +592,15 @@
 
                 <div class="relative" x-data="{ userOpen: false }">
                     <button @click="userOpen = !userOpen" class="flex items-center gap-3 p-1.5 pr-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 transition-all">
-                        <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=1d4ed8&color=fff" 
-                             class="w-9 h-9 rounded-lg shadow-sm">
+                        @if(Auth::user()->foto)
+                            <img src="{{ asset('storage/' . Auth::user()->foto) }}" class="w-9 h-9 rounded-lg object-cover shadow-sm">
+                        @else
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=1d4ed8&color=fff" 
+                                 class="w-9 h-9 rounded-lg shadow-sm">
+                        @endif
                         <div class="hidden md:block text-left">
                             <p class="text-xs font-bold text-slate-900 dark:text-white leading-none">{{ explode(' ', Auth::user()->name)[0] }}</p>
-                            <p class="text-[10px] font-bold text-blue-500 uppercase tracking-tighter mt-1">Admin Sistem</p>
+                            <p class="text-[10px] font-bold text-blue-500 uppercase tracking-tighter mt-1">{{ str_replace('_', ' ', strtoupper(Auth::user()->role)) }}</p>
                         </div>
                         <i class="ti ti-chevron-down text-xs text-slate-400 transition-transform" :class="userOpen ? 'rotate-180' : ''"></i>
                     </button>
@@ -559,6 +623,46 @@
         <!-- Scrollable Content -->
         <main class="flex-1 overflow-y-auto custom-scrollbar p-8">
             <div class="max-w-7xl mx-auto">
+                {{-- Flash Messages --}}
+                @if(session('success'))
+                <div class="mb-8 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center gap-3 text-emerald-600 animate-in fade-in slide-in-from-top-4">
+                    <i class="ti ti-circle-check text-xl"></i>
+                    <p class="text-xs font-bold">{{ session('success') }}</p>
+                </div>
+                @endif
+
+                @if(session('error'))
+                <div class="mb-8 p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-center gap-3 text-rose-600 animate-in fade-in slide-in-from-top-4">
+                    <i class="ti ti-alert-circle text-xl"></i>
+                    <p class="text-xs font-bold">{{ session('error') }}</p>
+                </div>
+                @endif
+
+                @if(session('info'))
+                <div class="mb-8 p-4 bg-blue-500/10 border border-blue-500/20 rounded-2xl flex items-center gap-3 text-blue-600 animate-in fade-in slide-in-from-top-4">
+                    <i class="ti ti-info-circle text-xl"></i>
+                    <p class="text-xs font-bold">{{ session('info') }}</p>
+                </div>
+                @endif
+
+                @if(Auth::check() && Auth::user()->must_change_password && Auth::user()->role !== 'admin')
+                <div class="mb-8 p-5 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 border border-amber-200 dark:border-amber-800/50 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-sm">
+                    <div class="flex items-center gap-4">
+                        <div class="w-12 h-12 flex items-center justify-center rounded-2xl bg-amber-100 dark:bg-amber-800/30 text-amber-600 dark:text-amber-400 shrink-0">
+                            <i class="ti ti-shield-lock text-2xl"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-amber-900 dark:text-amber-100">Lindungi Akun Anda</h4>
+                            <p class="text-xs text-amber-700/80 dark:text-amber-400/80 mt-1">Anda terdeteksi masih menggunakan kata sandi standar. Segera ganti kata sandi untuk mencegah akses tidak sah.</p>
+                        </div>
+                    </div>
+                    <a href="{{ route('profile.index') }}" class="whitespace-nowrap px-6 py-2.5 text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white rounded-xl transition-all shadow-md shadow-amber-600/20 flex items-center gap-2">
+                        <i class="ti ti-key"></i>
+                        Ganti Kata Sandi Sekarang
+                    </a>
+                </div>
+                @endif
+                
                 @yield('content')
             </div>
         </main>

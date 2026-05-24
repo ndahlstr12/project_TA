@@ -23,6 +23,15 @@
     </div>
     @endif
 
+    @if(session('info'))
+    <div class="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-blue-500 flex items-center justify-center text-white">
+            <i data-lucide="info" class="w-4 h-4"></i>
+        </div>
+        <p class="text-xs font-bold text-blue-600 tracking-tight">{{ session('info') }}</p>
+    </div>
+    @endif
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
         <!-- Profile Card -->
         <div class="lg:col-span-1 space-y-6">
@@ -33,9 +42,20 @@
                     </div>
                 </div>
                 <div class="px-6 pb-8 -mt-12 text-center relative z-10">
-                    <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=0a0a0a&color=fff&size=128" 
-                         alt="Profile" 
-                         class="w-24 h-24 rounded-2xl mx-auto border-4 border-white dark:border-surface-800 shadow-xl mb-4 grayscale dark:invert">
+                    <div class="relative inline-block group">
+                        @if(Auth::user()->foto)
+                            <img src="{{ asset('storage/' . Auth::user()->foto) }}" 
+                                 alt="Profile" 
+                                 class="w-24 h-24 rounded-2xl mx-auto border-4 border-white dark:border-surface-800 shadow-xl mb-4 object-cover">
+                        @else
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=0a0a0a&color=fff&size=128" 
+                                 alt="Profile" 
+                                 class="w-24 h-24 rounded-2xl mx-auto border-4 border-white dark:border-surface-800 shadow-xl mb-4 grayscale dark:invert">
+                        @endif
+                        <label for="foto-input" class="absolute inset-0 flex items-center justify-center bg-black/50 text-white rounded-2xl opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                            <i data-lucide="camera" class="w-6 h-6"></i>
+                        </label>
+                    </div>
                     <h3 class="text-xl font-bold tracking-tighter">{{ Auth::user()->name }}</h3>
                     <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-[0.2em] mt-2">{{ Auth::user()->role }}</p>
                 </div>
@@ -67,10 +87,23 @@
                     <h4 class="text-sm font-bold uppercase tracking-widest">Informasi Dasar</h4>
                 </div>
 
-                <form action="{{ route('profile.update') }}" method="POST" class="space-y-8">
+                <form action="{{ route('profile.update') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
                     @csrf
                     @method('PUT')
                     
+                    <input type="file" name="foto" id="foto-input" class="hidden" accept="image/*" onchange="previewImage(event)">
+
+                    <div id="image-preview-container" class="hidden space-y-2">
+                        <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1">Pratinjau Foto Baru</label>
+                        <div class="flex items-center gap-4 p-4 bg-neutral-50 dark:bg-white/5 border border-dashed border-base rounded-xl">
+                            <img id="image-preview" src="#" alt="Preview" class="w-16 h-16 rounded-lg object-cover">
+                            <div class="flex flex-col">
+                                <span class="text-[10px] font-bold text-neutral-900 dark:text-white uppercase tracking-tight">Siap diunggah</span>
+                                <span class="text-[9px] text-neutral-500 italic mt-0.5">* Simpan perubahan untuk menerapkan foto ini.</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div class="space-y-2">
                             <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1">Nama Lengkap</label>
@@ -185,4 +218,25 @@
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script>
+    function previewImage(event) {
+        const input = event.target;
+        const preview = document.getElementById('image-preview');
+        const container = document.getElementById('image-preview-container');
+        
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                container.classList.remove('hidden');
+            }
+            
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
+@endpush
 

@@ -63,10 +63,17 @@
                         <span class="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400">
                             <i class="fas fa-school"></i>
                         </span>
-                        <input type="text" name="kelas" value="{{ old('kelas', $siswa->kelas) }}" placeholder="Contoh: X RPL 1" 
-                               class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 transition-all outline-none" required>
+                        <select name="kelas_id" class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-2 focus:ring-indigo-500 outline-none appearance-none cursor-pointer" required>
+                            <option value="" disabled>Pilih Kelas</option>
+                            @foreach($kelas as $k)
+                                <option value="{{ $k->id }}" {{ old('kelas_id', $siswa->kelas_id) == $k->id ? 'selected' : '' }}>{{ $k->nama_kelas }}</option>
+                            @endforeach
+                        </select>
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-400">
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </div>
                     </div>
-                    @error('kelas') <p class="text-red-500 text-xs mt-1 ml-1 font-medium">{{ $message }}</p> @enderror
+                    @error('kelas_id') <p class="text-red-500 text-xs mt-1 ml-1 font-medium">{{ $message }}</p> @enderror
                 </div>
 
                 <!-- Jenis Kelamin -->

@@ -53,10 +53,13 @@
     <div class="card-pro overflow-hidden">
         <!-- Control Bar -->
         <div class="p-4 border-b border-base bg-neutral-50/30 dark:bg-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div class="flex items-center bg-white dark:bg-surface-900 border border-base rounded-lg px-3 py-1.5 gap-2 focus-within:ring-2 focus-within:ring-accent/10 transition-all">
+            <form action="{{ route('admin.users.index') }}" method="GET" class="flex items-center bg-white dark:bg-surface-900 border border-base rounded-lg px-3 py-1.5 gap-2 focus-within:ring-2 focus-within:ring-accent/10 transition-all">
+                @if(request('role'))
+                    <input type="hidden" name="role" value="{{ request('role') }}">
+                @endif
                 <i data-lucide="search" class="w-3.5 h-3.5 text-neutral-400"></i>
-                <input type="text" placeholder="Cari berdasarkan nama, ID, atau email..." class="bg-transparent border-none focus:ring-0 text-xs font-medium w-48 lg:w-80">
-            </div>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari berdasarkan nama, ID, atau email..." class="bg-transparent border-none focus:ring-0 text-xs font-medium w-48 lg:w-80">
+            </form>
             
             <div class="flex items-center gap-2">
                 <div class="flex bg-neutral-100 dark:bg-white/5 p-1 rounded-lg">

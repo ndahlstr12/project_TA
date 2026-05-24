@@ -12,11 +12,17 @@ class Kelas extends Model
     protected $fillable = [
         'nama_kelas',
         'tingkat',
-        'jurusan'
+        'jurusan',
+        'wali_id'
     ];
 
     public function siswas()
     {
-        return $this->hasMany(Siswa::class, 'kelas', 'nama_kelas');
+        return $this->hasMany(Siswa::class, 'kelas_id');
+    }
+
+    public function waliKelas()
+    {
+        return $this->belongsTo(Guru::class, 'wali_id');
     }
 }

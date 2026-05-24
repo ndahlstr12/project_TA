@@ -56,6 +56,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('siswas', SiswaController::class);
     Route::resource('gurus', GuruController::class);
     Route::resource('kelas', KelasController::class);
+    Route::resource('mapel', \App\Http\Controllers\Admin\MapelController::class);
     Route::resource('kriteria', KriteriaController::class);
     
     // Jadwal
@@ -75,13 +76,41 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
 // Route untuk Guru
 Route::middleware(['auth', 'role:guru'])->prefix('teacher')->name('guru.')->group(function () {
     Route::get('/dashboard', [TeacherController::class, 'index'])->name('dashboard');
+    
+    // Nilai Management
+    Route::get('/nilai', [\App\Http\Controllers\NilaiController::class, 'index'])->name('nilai.index');
+    Route::get('/nilai/create', [\App\Http\Controllers\NilaiController::class, 'create'])->name('nilai.create');
+    Route::post('/nilai/store', [\App\Http\Controllers\NilaiController::class, 'store'])->name('nilai.store');
+    Route::post('/nilai/import', [\App\Http\Controllers\NilaiController::class, 'import'])->name('nilai.import');
+
     Route::resource('cbt', CbtController::class);
     Route::post('/cbt/import', [CbtController::class, 'import'])->name('cbt.import');
+
+    // Kehadiran Management
+    Route::get('/kehadiran', [\App\Http\Controllers\KehadiranController::class, 'index'])->name('kehadiran.index');
+    Route::post('/kehadiran/store', [\App\Http\Controllers\KehadiranController::class, 'store'])->name('kehadiran.store');
+    Route::post('/kehadiran/batch-store-hadir', [\App\Http\Controllers\KehadiranController::class, 'batchStoreHadir'])->name('kehadiran.batch-store-hadir');
 });
 
 // Route untuk Wali Kelas
 Route::middleware(['auth', 'role:walikelas'])->prefix('class-teacher')->name('walikelas.')->group(function () {
     Route::get('/dashboard', [WaliKelasController::class, 'index'])->name('dashboard');
+    Route::get('/ranking', [WaliKelasController::class, 'ranking'])->name('ranking.index');
+    
+    // Jurnal Perilaku
+    Route::get('/jurnal', [\App\Http\Controllers\JurnalPerilakuController::class, 'index'])->name('jurnal.index');
+    Route::post('/jurnal', [\App\Http\Controllers\JurnalPerilakuController::class, 'store'])->name('jurnal.store');
+    Route::post('/jurnal/ai', [\App\Http\Controllers\JurnalPerilakuController::class, 'generateAiRecommendation'])->name('jurnal.ai');
+
+    // Raport Management
+    Route::get('/raport', [\App\Http\Controllers\RaportController::class, 'index'])->name('raport.index');
+    Route::get('/raport/{id}', [\App\Http\Controllers\RaportController::class, 'show'])->name('raport.show');
+    Route::put('/raport/{id}', [\App\Http\Controllers\RaportController::class, 'update'])->name('raport.update');
+    Route::post('/raport/{id}/ai', [\App\Http\Controllers\RaportController::class, 'generateAiSaran'])->name('raport.ai');
+    Route::post('/raport/{id}/send-email', [\App\Http\Controllers\RaportController::class, 'sendEmail'])->name('raport.send-email');
+    Route::get('/raport/{id}/export-pdf', [\App\Http\Controllers\RaportController::class, 'exportPdf'])->name('raport.export-pdf');
+
+
     Route::resource('cbt', CbtController::class);
     Route::post('/cbt/import', [CbtController::class, 'import'])->name('cbt.import');
 });

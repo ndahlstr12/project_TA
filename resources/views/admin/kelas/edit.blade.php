@@ -57,6 +57,19 @@
                 </div>
             </div>
 
+            <div class="space-y-2">
+                <label class="text-[10px] font-bold text-navy-400 uppercase tracking-widest ml-1">Wali Kelas</label>
+                <select name="wali_id" class="w-full px-4 py-3.5 bg-navy-50 dark:bg-white/5 border border-navy-100 dark:border-white/10 rounded-xl text-sm font-bold focus:border-navy-950 dark:focus:border-white outline-none transition-all appearance-none cursor-pointer">
+                    <option value="">-- Pilih Wali Kelas --</option>
+                    @foreach($gurus as $guru)
+                        <option value="{{ $guru->id }}" {{ old('wali_id', $kela->wali_id) == $guru->id ? 'selected' : '' }}>{{ $guru->nama }}</option>
+                    @endforeach
+                </select>
+                @error('wali_id')
+                    <p class="text-[10px] font-bold text-rose-500 mt-1 ml-1 uppercase">{{ $message }}</p>
+                @enderror
+            </div>
+
             <div class="pt-6">
                 <button type="submit" class="w-full py-4 bg-amber-500 text-white text-xs font-black rounded-xl uppercase tracking-[0.2em] hover:bg-amber-600 transition-all shadow-xl shadow-amber-500/20 active:scale-[0.98]">
                     Perbarui Data Kelas

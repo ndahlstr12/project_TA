@@ -1,0 +1,93 @@
+@extends('layouts.admin')
+
+@section('title', 'Peringkat SPK Siswa')
+@section('page_title', 'Peringkat Berdasarkan Kriteria SPK')
+
+@section('content')
+<div class="space-y-8">
+    
+    <div class="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="flex items-center gap-5">
+            <div class="w-16 h-16 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-500">
+                <i class="ti ti-award text-3xl"></i>
+            </div>
+            <div>
+                <h3 class="text-xl font-extrabold text-slate-900 dark:text-white">Ranking SPK Kelas {{ $kelas->nama_kelas ?? '' }}</h3>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Sistem Pendukung Keputusan Berbasis Kriteria</p>
+            </div>
+        </div>
+        <div class="px-6 py-3 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5">
+            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center md:text-left">Tahun Ajaran</p>
+            <p class="text-sm font-black text-slate-900 dark:text-white">2026/2027 - GENAP</p>
+        </div>
+    </div>
+
+    <div class="card-pro overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-slate-50 dark:bg-white/5 border-b border-slate-100 dark:border-white/5 text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                        <th class="px-6 py-5 text-center w-20">Rank</th>
+                        <th class="px-6 py-5">Nama Siswa</th>
+                        <th class="px-6 py-5">NISN</th>
+                        <th class="px-6 py-5 text-center">Skor Akhir</th>
+                        <th class="px-6 py-5 text-right">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50 dark:divide-white/5">
+                    @forelse($rankings as $rank)
+                    <tr class="hover:bg-slate-50/50 dark:hover:bg-white/5 transition-colors">
+                        <td class="px-6 py-5 text-center">
+                            @if($rank->ranking <= 3)
+                                <div class="inline-flex items-center justify-center w-10 h-10 rounded-full @if($rank->ranking == 1) bg-amber-400 @elseif($rank->ranking == 2) bg-slate-300 @else bg-orange-400 @endif text-white font-black text-sm shadow-sm">
+                                    {{ $rank->ranking }}
+                                </div>
+                            @else
+                                <span class="font-black text-slate-400 text-sm">#{{ $rank->ranking }}</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-5">
+                            <span class="text-sm font-bold text-slate-900 dark:text-white">{{ $rank->siswa->nama }}</span>
+                        </td>
+                        <td class="px-6 py-5 text-xs font-medium text-slate-500">
+                            {{ $rank->siswa->nisn }}
+                        </td>
+                        <td class="px-6 py-5 text-center">
+                            <span class="px-3 py-1 rounded-lg bg-blue-500/10 text-blue-600 font-black text-xs">
+                                {{ number_format($rank->skor_spk, 3) }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-5 text-right">
+                            @if($rank->ranking <= 5)
+                                <span class="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Unggul</span>
+                            @else
+                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Standar</span>
+                            @endif
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" class="px-6 py-16 text-center">
+                            <div class="flex flex-col items-center opacity-30">
+                                <i class="ti ti-award-off text-5xl mb-4"></i>
+                                <p class="text-xs font-black uppercase tracking-widest">Data ranking belum diproses oleh Admin</p>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Info Box -->
+    <div class="p-6 bg-blue-500/5 border border-blue-500/10 rounded-3xl flex gap-4">
+        <i class="ti ti-info-circle text-blue-500 text-2xl shrink-0"></i>
+        <div>
+            <h4 class="text-xs font-black text-blue-500 uppercase tracking-widest mb-1">Informasi SPK</h4>
+            <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">Peringkat ini dihitung secara otomatis oleh sistem berdasarkan kriteria yang telah ditentukan (Nilai Akademik, Kehadiran, dan Perilaku). Gunakan data ini sebagai referensi bimbingan konseling dan pemberian apresiasi siswa.</p>
+        </div>
+    </div>
+
+</div>
+@endsection

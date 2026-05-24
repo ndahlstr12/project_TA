@@ -35,10 +35,11 @@ class DashboardController extends Controller
             'walikelas_selesai' => $walikelasSelesai,
         ];
 
-        // Ambil daftar guru dan wali kelas (Status REAL)
+        // Ambil daftar guru dan wali kelas (Status REAL) - OPTIMASI: take(5) sebelum get()
         $pendingTeachers = \App\Models\User::whereIn('role', ['guru', 'walikelas'])
             ->with('guru')
             ->latest()
+            ->take(5)
             ->get()
             ->map(function($user) {
                 if ($user->role === 'walikelas') {
@@ -53,8 +54,7 @@ class DashboardController extends Controller
                     $user->tipe_tugas = 'Upload Nilai';
                 }
                 return $user;
-            })
-            ->take(5);
+            });
 
         return view('admin.dashboard', compact('stats', 'pendingTeachers'));
     }

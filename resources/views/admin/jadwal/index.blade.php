@@ -50,13 +50,13 @@
                         </div>
 
                         <div>
-                            <h4 class="text-sm font-bold text-neutral-800 dark:text-neutral-200 tracking-tight line-clamp-1">{{ $jadwal->mapel }}</h4>
-                            <p class="text-[11px] text-neutral-500 font-medium mt-1">Pengajar: {{ $jadwal->guru }}</p>
+                            <h4 class="text-sm font-bold text-neutral-800 dark:text-neutral-200 tracking-tight line-clamp-1">{{ $jadwal->mapel->nama_mapel ?? 'N/A' }}</h4>
+                            <p class="text-[11px] text-neutral-500 font-medium mt-1">Pengajar: {{ $jadwal->guru->nama ?? 'N/A' }}</p>
                         </div>
 
                         <div class="pt-4 border-t border-base flex items-center justify-between">
                             <span class="text-[10px] font-bold text-neutral-400 uppercase">Alokasi Ruang</span>
-                            <span class="text-[10px] font-black text-neutral-700 dark:text-neutral-300">{{ $jadwal->kelas }}</span>
+                            <span class="text-[10px] font-black text-neutral-700 dark:text-neutral-300">{{ $jadwal->kelas->nama_kelas ?? 'N/A' }}</span>
                         </div>
                     </div>
                 </div>
@@ -98,15 +98,30 @@
                     </div>
                     <div class="col-span-2 space-y-2">
                         <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1">Mata Pelajaran</label>
-                        <input type="text" name="mapel" class="w-full px-4 py-2.5 bg-neutral-50 dark:bg-surface-900 border border-base rounded-lg text-sm font-semibold outline-none" placeholder="Contoh: Matematika" required>
+                        <input type="text" name="mapel_nama" list="mapel_list" placeholder="Ketik nama mata pelajaran..." class="w-full px-4 py-2.5 bg-neutral-50 dark:bg-surface-900 border border-base rounded-lg text-sm font-semibold outline-none focus:ring-2 focus:ring-accent/10 transition-all" required>
+                        <datalist id="mapel_list">
+                            @foreach($mapels as $mapel)
+                                <option value="{{ $mapel->nama_mapel }}">
+                            @endforeach
+                        </datalist>
                     </div>
                     <div class="col-span-2 space-y-2">
                         <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1">Guru Pengampu</label>
-                        <input type="text" name="guru" class="w-full px-4 py-2.5 bg-neutral-50 dark:bg-surface-900 border border-base rounded-lg text-sm font-semibold outline-none" placeholder="Nama Guru" required>
+                        <select name="guru_id" class="w-full px-4 py-2.5 bg-neutral-50 dark:bg-surface-900 border border-base rounded-lg text-sm font-semibold outline-none" required>
+                            <option value="" disabled selected>Pilih Guru</option>
+                            @foreach($gurus as $guru)
+                                <option value="{{ $guru->id }}">{{ $guru->nama }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="col-span-2 space-y-2">
                         <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1">Ruang / Kelas</label>
-                        <input type="text" name="kelas" class="w-full px-4 py-2.5 bg-neutral-50 dark:bg-surface-900 border border-base rounded-lg text-sm font-semibold outline-none" placeholder="Contoh: XII RPL 1" required>
+                        <select name="kelas_id" class="w-full px-4 py-2.5 bg-neutral-50 dark:bg-surface-900 border border-base rounded-lg text-sm font-semibold outline-none" required>
+                            <option value="" disabled selected>Pilih Kelas</option>
+                            @foreach($kelas as $k)
+                                <option value="{{ $k->id }}">{{ $k->nama_kelas }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
                 <div class="flex gap-3 pt-4">

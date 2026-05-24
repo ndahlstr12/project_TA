@@ -37,10 +37,10 @@
     <div class="card-pro overflow-hidden">
         <!-- Control Bar -->
         <div class="p-4 border-b border-base bg-neutral-50/30 dark:bg-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div class="flex items-center bg-white dark:bg-surface-900 border border-base rounded-lg px-3 py-1.5 gap-2 focus-within:ring-2 focus-within:ring-accent/10 transition-all">
+            <form action="{{ route('admin.gurus.index') }}" method="GET" class="flex items-center bg-white dark:bg-surface-900 border border-base rounded-lg px-3 py-1.5 gap-2 focus-within:ring-2 focus-within:ring-accent/10 transition-all">
                 <i data-lucide="search" class="w-3.5 h-3.5 text-neutral-400"></i>
-                <input type="text" placeholder="Search by NIP or name..." class="bg-transparent border-none focus:ring-0 text-xs font-medium w-48 lg:w-80">
-            </div>
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search by NIP or name..." class="bg-transparent border-none focus:ring-0 text-xs font-medium w-48 lg:w-80">
+            </form>
             
             <div class="flex items-center gap-2">
                 <button class="px-3 py-1.5 text-[10px] font-bold border border-base rounded-lg hover:bg-neutral-100 dark:hover:bg-white/5 transition-colors uppercase tracking-widest text-neutral-500">

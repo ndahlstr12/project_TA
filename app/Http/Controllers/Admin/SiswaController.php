@@ -140,6 +140,22 @@ class SiswaController extends Controller
                     // Lookup Kelas dari memori (sangat cepat)
                     $kelasId = $kelasMap[$namaKelas] ?? null;
 
+                    // OTOMATIS: Buat kelas jika belum ada
+                    if ($namaKelas && !$kelasId) {
+                        // Parsing sederhana untuk Tingkat dan Jurusan (Contoh: X-AKL-1 atau XII RPL 1)
+                        $parts = preg_split('/[- ]/', $namaKelas);
+                        $tingkat = $parts[0] ?? 'X';
+                        $jurusan = $parts[1] ?? 'Umum';
+
+                        $newKelas = \App\Models\Kelas::create([
+                            'nama_kelas' => $namaKelas,
+                            'tingkat' => $tingkat,
+                            'jurusan' => $jurusan
+                        ]);
+                        $kelasId = $newKelas->id;
+                        $kelasMap[$namaKelas] = $kelasId; // Update map memory
+                    }
+
                     // 1. Simpan/Update Data Siswa
                     $siswa = Siswa::updateOrCreate(
                         ['nisn' => $nisn],

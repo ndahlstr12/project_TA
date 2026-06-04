@@ -20,8 +20,8 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
-        $loginInput = $request->input('login'); 
-        $password = $request->input('password');
+        $loginInput = trim($request->input('login')); 
+        $password = trim($request->input('password'));
         $remember = $request->has('remember');
 
         // 1. Cek di tabel User (Admin, Guru, Siswa yang sudah punya akun)
@@ -54,9 +54,17 @@ class AuthController extends Controller
             $role = $isOrtu ? 'orangtua' : 'siswa';
             $user = User::where('siswa_id', $siswa->id)->where('role', $role)->first();
             
-            if ($user && Hash::check($password, $user->password)) {
-                Auth::login($user, $remember);
-                return $this->authenticated($request, $user);
+            if ($user) {
+                // Cek password normal atau fallback untuk orangtua (support data lama)
+                $match = Hash::check($password, $user->password);
+                if (!$match && $role === 'orangtua') {
+                    $match = Hash::check('ortu' . $password, $user->password);
+                }
+
+                if ($match) {
+                    Auth::login($user, $remember);
+                    return $this->authenticated($request, $user);
+                }
             }
         }
 

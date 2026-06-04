@@ -33,7 +33,7 @@
             <p class="text-xs text-neutral-500 mt-1">Kelola nilai siswa untuk mata pelajaran ini.</p>
             
             <div class="mt-8 space-y-3">
-                <a href="{{ route('guru.nilai.create', ['guru_mapel_id' => $gm->id]) }}" class="w-full py-2.5 px-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all">
+                <a href="{{ route('shared.nilai.create', ['guru_mapel_id' => $gm->id]) }}" class="w-full py-2.5 px-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:opacity-90 transition-all">
                     <i data-lucide="edit-3" class="w-3.5 h-3.5"></i>
                     Input Manual
                 </a>
@@ -67,7 +67,7 @@
                     <i data-lucide="x" class="w-5 h-5"></i>
                 </button>
             </div>
-            <form :action="'{{ route('guru.nilai.import') }}'" method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
+            <form :action="'{{ route('shared.nilai.import') }}'" method="POST" enctype="multipart/form-data" class="p-6 space-y-4">
                 @csrf
                 <input type="hidden" name="guru_mapel_id" :value="id">
                 

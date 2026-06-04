@@ -27,4 +27,9 @@ class CbtUjian extends Model
         'acak_jawaban' => 'boolean',
         'status' => 'boolean',
     ];
+
+    public function soals()
+    {
+        return $this->hasMany(CbtSoal::class, 'ujian_id');
+    }
 }

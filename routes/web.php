@@ -73,23 +73,39 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::put('/settings', [SettingController::class, 'update'])->name('settings.update');
 });
 
+// Route Bersama untuk Guru dan Wali Kelas (Fitur Mengajar)
+Route::middleware(['auth', 'role:guru|walikelas'])->group(function () {
+    // Kehadiran Management (Shared)
+    Route::get('/kehadiran', [\App\Http\Controllers\KehadiranController::class, 'index'])->name('shared.kehadiran.index');
+    Route::post('/kehadiran/store', [\App\Http\Controllers\KehadiranController::class, 'store'])->name('shared.kehadiran.store');
+    Route::post('/kehadiran/batch-store-hadir', [\App\Http\Controllers\KehadiranController::class, 'batchStoreHadir'])->name('shared.kehadiran.batch-store-hadir');
+
+    // Nilai Management (Shared)
+    Route::get('/nilai', [\App\Http\Controllers\NilaiController::class, 'index'])->name('shared.nilai.index');
+    Route::get('/nilai/create', [\App\Http\Controllers\NilaiController::class, 'create'])->name('shared.nilai.create');
+    Route::post('/nilai/store', [\App\Http\Controllers\NilaiController::class, 'store'])->name('shared.nilai.store');
+    Route::post('/nilai/import', [\App\Http\Controllers\NilaiController::class, 'import'])->name('shared.nilai.import');
+
+    // Unified CBT & Ujian Management (Shared)
+    Route::get('/cbt', [CbtController::class, 'index'])->name('shared.cbt.index');
+    Route::get('/cbt/create', [CbtController::class, 'create'])->name('shared.cbt.create');
+    Route::post('/cbt', [CbtController::class, 'store'])->name('shared.cbt.store');
+    Route::get('/cbt/{id}', [CbtController::class, 'show'])->name('shared.cbt.show');
+    Route::post('/cbt/{id}/soal', [CbtController::class, 'storeSoal'])->name('shared.cbt.soal.store');
+    Route::post('/cbt/{id}/import', [CbtController::class, 'import'])->name('shared.cbt.import');
+    Route::post('/cbt/{id}/toggle', [CbtController::class, 'toggleStatus'])->name('shared.cbt.toggle');
+});
+
 // Route untuk Guru
 Route::middleware(['auth', 'role:guru'])->prefix('teacher')->name('guru.')->group(function () {
     Route::get('/dashboard', [TeacherController::class, 'index'])->name('dashboard');
     
-    // Nilai Management
-    Route::get('/nilai', [\App\Http\Controllers\NilaiController::class, 'index'])->name('nilai.index');
-    Route::get('/nilai/create', [\App\Http\Controllers\NilaiController::class, 'create'])->name('nilai.create');
-    Route::post('/nilai/store', [\App\Http\Controllers\NilaiController::class, 'store'])->name('nilai.store');
-    Route::post('/nilai/import', [\App\Http\Controllers\NilaiController::class, 'import'])->name('nilai.import');
-
-    Route::resource('cbt', CbtController::class);
-    Route::post('/cbt/import', [CbtController::class, 'import'])->name('cbt.import');
-
-    // Kehadiran Management
-    Route::get('/kehadiran', [\App\Http\Controllers\KehadiranController::class, 'index'])->name('kehadiran.index');
-    Route::post('/kehadiran/store', [\App\Http\Controllers\KehadiranController::class, 'store'])->name('kehadiran.store');
-    Route::post('/kehadiran/batch-store-hadir', [\App\Http\Controllers\KehadiranController::class, 'batchStoreHadir'])->name('kehadiran.batch-store-hadir');
+    // Alias ke route bersama untuk kompatibilitas
+    Route::get('/nilai', fn() => redirect()->route('shared.nilai.index'))->name('nilai.index');
+    Route::get('/kehadiran', fn() => redirect()->route('shared.kehadiran.index'))->name('kehadiran.index');
+    Route::get('/cbt', fn() => redirect()->route('shared.cbt.index'))->name('cbt.index');
+    Route::get('/cbt/create', fn() => redirect()->route('shared.cbt.create'))->name('cbt.create');
+    Route::get('/cbt/{id}', fn($id) => redirect()->route('shared.cbt.show', $id))->name('cbt.show');
 });
 
 // Route untuk Wali Kelas
@@ -97,9 +113,18 @@ Route::middleware(['auth', 'role:walikelas'])->prefix('class-teacher')->name('wa
     Route::get('/dashboard', [WaliKelasController::class, 'index'])->name('dashboard');
     Route::get('/ranking', [WaliKelasController::class, 'ranking'])->name('ranking.index');
     
+    // Alias ke route bersama
+    Route::get('/nilai', fn() => redirect()->route('shared.nilai.index'))->name('nilai.index');
+    Route::get('/kehadiran', fn() => redirect()->route('shared.kehadiran.index'))->name('kehadiran.index');
+    Route::get('/cbt', fn() => redirect()->route('shared.cbt.index'))->name('cbt.index');
+    Route::get('/cbt/create', fn() => redirect()->route('shared.cbt.create'))->name('cbt.create');
+    Route::get('/cbt/{id}', fn($id) => redirect()->route('shared.cbt.show', $id))->name('cbt.show');
+
     // Jurnal Perilaku
     Route::get('/jurnal', [\App\Http\Controllers\JurnalPerilakuController::class, 'index'])->name('jurnal.index');
     Route::post('/jurnal', [\App\Http\Controllers\JurnalPerilakuController::class, 'store'])->name('jurnal.store');
+    Route::put('/jurnal/{id}', [\App\Http\Controllers\JurnalPerilakuController::class, 'update'])->name('jurnal.update');
+    Route::delete('/jurnal/{id}', [\App\Http\Controllers\JurnalPerilakuController::class, 'destroy'])->name('jurnal.destroy');
     Route::post('/jurnal/ai', [\App\Http\Controllers\JurnalPerilakuController::class, 'generateAiRecommendation'])->name('jurnal.ai');
 
     // Raport Management
@@ -110,17 +135,33 @@ Route::middleware(['auth', 'role:walikelas'])->prefix('class-teacher')->name('wa
     Route::post('/raport/{id}/send-email', [\App\Http\Controllers\RaportController::class, 'sendEmail'])->name('raport.send-email');
     Route::get('/raport/{id}/export-pdf', [\App\Http\Controllers\RaportController::class, 'exportPdf'])->name('raport.export-pdf');
 
-
-    Route::resource('cbt', CbtController::class);
-    Route::post('/cbt/import', [CbtController::class, 'import'])->name('cbt.import');
+    // SPK Ranking Generation
+    Route::post('/ranking/generate', [WaliKelasController::class, 'generateRanking'])->name('ranking.generate');
 });
 
 // Route untuk Siswa
 Route::middleware(['auth', 'role:siswa'])->prefix('student')->name('siswa.')->group(function () {
     Route::get('/dashboard', [StudentDashboardController::class, 'index'])->name('dashboard');
+    
+    // CBT
+    Route::get('/cbt', [StudentDashboardController::class, 'cbtIndex'])->name('cbt.index');
+    Route::get('/cbt/{id}', [StudentDashboardController::class, 'cbtShow'])->name('cbt.show');
+    Route::get('/cbt/{id}/test', [StudentDashboardController::class, 'cbtTest'])->name('cbt.test');
+    Route::post('/cbt/{id}/submit', [StudentDashboardController::class, 'cbtSubmit'])->name('cbt.submit');
+    Route::get('/cbt/{id}/result', [StudentDashboardController::class, 'cbtResult'])->name('cbt.result');
+
+    // Raport
+    Route::get('/raport', [StudentDashboardController::class, 'raportIndex'])->name('raport.index');
+
+    // Jurnal
+    Route::get('/jurnal', [StudentDashboardController::class, 'jurnalIndex'])->name('jurnal.index');
+    Route::post('/jurnal', [StudentDashboardController::class, 'jurnalStore'])->name('jurnal.store');
 });
 
 // Route untuk Orang Tua
 Route::middleware(['auth', 'role:orangtua'])->prefix('parent')->name('parent.')->group(function () {
     Route::get('/dashboard', [OrangTuaController::class, 'index'])->name('dashboard');
+    Route::get('/nilai', [OrangTuaController::class, 'nilai'])->name('nilai.index');
+    Route::get('/jurnal', [OrangTuaController::class, 'jurnal'])->name('jurnal.index');
+    Route::get('/raport', [OrangTuaController::class, 'raport'])->name('raport.index');
 });

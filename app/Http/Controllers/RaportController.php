@@ -109,35 +109,27 @@ class RaportController extends Controller
         return redirect()->back()->with('success', 'Data raport berhasil diperbarui.');
     }
 
-    public function generateAiSaran($id)
+    public function generateAiSaran($id, \App\Services\AiRecommendationService $aiService)
     {
-        $siswa = Siswa::findOrFail($id);
         $semester = Setting::get('semester', 'Ganjil');
         $tahunAjaran = Setting::get('tahun_ajaran', '2025/2026');
 
-        $nilais = Nilai::where('siswa_id', $id)->where('semester', $semester)->get();
-        $jurnals = JurnalPerilaku::where('siswa_id', $id)->get();
-        $kehadiran = Kehadiran::where('siswa_id', $id)->get();
+        $raport = Raport::where('siswa_id', $id)
+            ->where('semester', $semester)
+            ->where('tahun_ajaran', $tahunAjaran)
+            ->first();
 
-        // Prompt Construction
-        $prompt = "Berikan saran singkat dan motivasi untuk raport siswa bernama {$siswa->nama}. ";
-        $prompt .= "Nilai rata-rata: " . $nilais->avg('nilai_angka') . ". ";
-        $prompt .= "Catatan perilaku: " . $jurnals->pluck('catatan')->implode(', ') . ". ";
-        $prompt .= "Kehadiran: Sakit (" . $kehadiran->where('status', 'Sakit')->count() . "), Izin (" . $kehadiran->where('status', 'Izin')->count() . "), Alpa (" . $kehadiran->where('status', 'Alpa')->count() . ").";
+        if (!$raport) {
+            return redirect()->back()->with('error', 'Silahkan simpan data raport terlebih dahulu sebelum menggunakan AI.');
+        }
 
-        // AI API Call (Placeholder - assuming Gemini or similar)
-        $saran = "Berdasarkan prestasi akademik dan catatan perilakunya, " . $siswa->nama . " menunjukkan potensi yang baik. Perlu ditingkatkan konsistensi dalam kehadiran untuk hasil yang lebih maksimal.";
-        $rekomendasi = "Rekomendasi penanganan: Tingkatkan frekuensi bimbingan akademik untuk mata pelajaran dengan nilai di bawah KKM dan jalin komunikasi lebih intens dengan orang tua terkait motivasi belajar di rumah.";
+        $result = $aiService->generateRecommendation($raport);
 
-        Raport::updateOrCreate(
-            ['siswa_id' => $id, 'semester' => $semester, 'tahun_ajaran' => $tahunAjaran],
-            [
-                'saran_ai' => $saran,
-                'rekomendasi_ai' => $rekomendasi
-            ]
-        );
-
-        return redirect()->back()->with('success', 'Saran dan Rekomendasi AI berhasil digenerate.');
+        if ($result['success']) {
+            return redirect()->back()->with('success', $result['message']);
+        } else {
+            return redirect()->back()->with('error', $result['message']);
+        }
     }
 
     public function sendEmail($id)

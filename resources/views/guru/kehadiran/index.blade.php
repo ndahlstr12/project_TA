@@ -12,7 +12,7 @@
             <h1 class="text-3xl font-bold tracking-tighter text-slate-900 dark:text-white">Presensi Siswa</h1>
             <p class="text-sm text-neutral-500 mt-2">Pilih kelas dan catat kehadiran siswa hari ini.</p>
         </div>
-        <form action="{{ route('guru.kehadiran.index') }}" method="GET" class="flex gap-3">
+        <form action="{{ route('shared.kehadiran.index') }}" method="GET" class="flex gap-3">
             <select name="kelas_id" onchange="this.form.submit()" class="px-4 py-2 text-xs font-bold border border-base rounded-lg bg-white dark:bg-white/5 outline-none focus:ring-2 focus:ring-accent/10 transition-all">
                 <option value="">Pilih Kelas</option>
                 @foreach($allKelas as $k)
@@ -122,7 +122,7 @@
         btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i>';
         lucide.createIcons();
 
-        fetch("{{ route('guru.kehadiran.store') }}", {
+        fetch("{{ route('shared.kehadiran.store') }}", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -163,7 +163,7 @@
     function finalizeHadir() {
         if(!confirm('Tandai semua siswa yang belum diabsen hari ini sebagai Hadir Tepat Waktu?')) return;
 
-        fetch("{{ route('guru.kehadiran.batch-store-hadir') }}", {
+        fetch("{{ route('shared.kehadiran.batch-store-hadir') }}", {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

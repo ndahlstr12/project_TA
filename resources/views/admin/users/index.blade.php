@@ -62,6 +62,23 @@
             </form>
             
             <div class="flex items-center gap-2">
+                @if(in_array($activeTab, ['siswa', 'orangtua']))
+                <form action="{{ route('admin.users.index') }}" method="GET" class="flex items-center gap-2">
+                    <input type="hidden" name="role" value="{{ $activeTab }}">
+                    @if(request('search'))
+                        <input type="hidden" name="search" value="{{ request('search') }}">
+                    @endif
+                    <select name="kelas_id" onchange="this.form.submit()" class="px-4 py-1.5 text-[10px] font-bold border border-base rounded-lg bg-white dark:bg-white/5 outline-none focus:ring-2 focus:ring-accent/10 transition-all cursor-pointer">
+                        <option value="">Semua Kelas</option>
+                        @foreach($kelasList as $kelas)
+                            <option value="{{ $kelas->id }}" {{ request('kelas_id') == $kelas->id ? 'selected' : '' }}>
+                                {{ $kelas->nama_kelas }}
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
+                @endif
+
                 <div class="flex bg-neutral-100 dark:bg-white/5 p-1 rounded-lg">
                     <a href="{{ route('admin.users.index') }}" class="px-4 py-1.5 text-[10px] font-bold {{ $activeTab === 'all' ? 'bg-white dark:bg-white/10 shadow-sm rounded text-neutral-900 dark:text-white' : 'text-neutral-400' }} uppercase tracking-widest transition-all">Semua</a>
                     <a href="{{ route('admin.users.index', ['role' => 'admin']) }}" class="px-4 py-1.5 text-[10px] font-bold {{ $activeTab === 'admin' ? 'bg-white dark:bg-white/10 shadow-sm rounded text-neutral-900 dark:text-white' : 'text-neutral-400' }} uppercase tracking-widest transition-all">Admin</a>
@@ -82,6 +99,7 @@
                         <th class="px-8 py-4 w-10"><input type="checkbox" class="rounded border-base text-accent focus:ring-0"></th>
                         <th class="px-8 py-4">Profil Identitas</th>
                         <th class="px-8 py-4">Level Akses</th>
+                        <th class="px-8 py-4">Grup / Kelas</th>
                         <th class="px-8 py-4">Kredensial</th>
                         <th class="px-8 py-4 text-right">Aksi Sistem</th>
                     </tr>
@@ -109,6 +127,19 @@
                                 @else bg-neutral-500/5 text-neutral-500 border-neutral-500/10 @endif">
                                 {{ $user->role }}
                             </span>
+                        </td>
+                        <td class="px-8 py-5">
+                            @if(in_array($user->role, ['siswa', 'orangtua']) && $user->siswa)
+                                <span class="text-xs font-bold text-neutral-700 dark:text-neutral-300">
+                                    {{ $user->siswa->kelas->nama_kelas ?? 'Tanpa Kelas' }}
+                                </span>
+                            @elseif(in_array($user->role, ['guru', 'walikelas']) && $user->guru)
+                                <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
+                                    NIP: {{ $user->guru->nip }}
+                                </span>
+                            @else
+                                <span class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">-</span>
+                            @endif
                         </td>
                         <td class="px-8 py-5">
                             <div class="space-y-1">
@@ -161,7 +192,8 @@
                 <div class="space-y-4">
                     <div class="p-4 bg-blue-50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 rounded-xl">
                         <p class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase leading-relaxed">
-                            Format CSV: nama, email, password, role, identifier(nip/nisn)
+                            Format CSV Sederhana: nisn, nama, nama_kelas (Auto-create kelas)<br>
+                            Format CSV Lengkap: nama, email, password, role, identifier(nip/nisn)
                         </p>
                     </div>
                     <div class="relative group">

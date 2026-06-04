@@ -30,42 +30,83 @@
         @foreach($days as $day)
         <div class="space-y-6">
             <div class="flex items-center gap-4">
-                <h3 class="text-sm font-black uppercase tracking-[0.2em] text-neutral-900 dark:text-white">{{ $day }}</h3>
+                <div class="w-10 h-10 rounded-xl bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 flex items-center justify-center font-black text-xs">
+                    {{ substr($day, 0, 1) }}
+                </div>
+                <div>
+                    <h3 class="text-sm font-black uppercase tracking-[0.2em] text-neutral-900 dark:text-white">{{ $day }}</h3>
+                    <p class="text-[9px] font-bold text-neutral-400 uppercase tracking-widest mt-0.5">{{ $jadwals->where('hari', $day)->count() }} Sesi Pelajaran</p>
+                </div>
                 <div class="h-px flex-1 bg-neutral-100 dark:bg-white/5"></div>
-                <span class="text-[10px] font-bold text-neutral-400 uppercase">{{ $jadwals->where('hari', $day)->count() }} Mata Pelajaran</span>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                @forelse($jadwals->where('hari', $day) as $jadwal)
-                <div class="card-pro group cursor-pointer hover:border-neutral-400 transition-colors">
-                    <div class="p-5 space-y-4">
-                        <div class="flex items-center justify-between">
-                            <span class="text-[10px] font-black text-accent uppercase tracking-widest bg-accent/5 px-2 py-1 rounded border border-accent/10">
-                                {{ $jadwal->jam_mulai }} — {{ $jadwal->jam_selesai }}
-                            </span>
-                            <div class="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <button class="p-1 text-neutral-400 hover:text-neutral-900"><i data-lucide="edit-2" class="w-3 h-3"></i></button>
-                                <button class="p-1 text-neutral-400 hover:text-rose-500"><i data-lucide="trash" class="w-3 h-3"></i></button>
-                            </div>
-                        </div>
-
-                        <div>
-                            <h4 class="text-sm font-bold text-neutral-800 dark:text-neutral-200 tracking-tight line-clamp-1">{{ $jadwal->mapel->nama_mapel ?? 'N/A' }}</h4>
-                            <p class="text-[11px] text-neutral-500 font-medium mt-1">Pengajar: {{ $jadwal->guru->nama ?? 'N/A' }}</p>
-                        </div>
-
-                        <div class="pt-4 border-t border-base flex items-center justify-between">
-                            <span class="text-[10px] font-bold text-neutral-400 uppercase">Alokasi Ruang</span>
-                            <span class="text-[10px] font-black text-neutral-700 dark:text-neutral-300">{{ $jadwal->kelas->nama_kelas ?? 'N/A' }}</span>
-                        </div>
-                    </div>
+            <div class="card-pro overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left">
+                        <thead>
+                            <tr class="bg-neutral-50/50 dark:bg-white/5 border-b border-base text-[9px] font-black text-neutral-400 uppercase tracking-[0.2em]">
+                                <th class="px-8 py-4 w-40">Waktu / Jam</th>
+                                <th class="px-8 py-4">Mata Pelajaran</th>
+                                <th class="px-8 py-4">Tenaga Pengajar</th>
+                                <th class="px-8 py-4">Ruang / Kelas</th>
+                                <th class="px-8 py-4 text-right">Manajemen</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-base">
+                            @forelse($jadwals->where('hari', $day)->sortBy('jam_mulai') as $jadwal)
+                            <tr class="hover:bg-neutral-50/30 dark:hover:bg-white/5 transition-colors group">
+                                <td class="px-8 py-5">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-1.5 h-1.5 rounded-full bg-accent"></div>
+                                        <span class="text-xs font-bold text-neutral-800 dark:text-neutral-200">
+                                            {{ $jadwal->jam_mulai }} — {{ $jadwal->jam_selesai }}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-5">
+                                    <p class="text-xs font-bold text-neutral-900 dark:text-white tracking-tight">{{ $jadwal->mapel->nama_mapel ?? 'N/A' }}</p>
+                                    <p class="text-[9px] text-neutral-400 font-medium uppercase mt-1 tracking-tighter italic">Kurikulum Nasional</p>
+                                </td>
+                                <td class="px-8 py-5">
+                                    <div class="flex items-center gap-3">
+                                        <div class="w-8 h-8 rounded-lg bg-neutral-100 dark:bg-white/5 flex items-center justify-center text-neutral-400">
+                                            <i data-lucide="user-check" class="w-4 h-4"></i>
+                                        </div>
+                                        <span class="text-xs font-bold text-neutral-600 dark:text-neutral-400">{{ $jadwal->guru->nama ?? 'N/A' }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-5">
+                                    <span class="px-3 py-1 bg-neutral-100 dark:bg-white/5 rounded-md text-[10px] font-black text-neutral-500 dark:text-neutral-400 uppercase border border-base">
+                                        {{ $jadwal->kelas->nama_kelas ?? 'N/A' }}
+                                    </span>
+                                </td>
+                                <td class="px-8 py-5 text-right">
+                                    <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">
+                                        <button class="p-2 text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-white/5 rounded-lg transition-colors">
+                                            <i data-lucide="edit-3" class="w-4 h-4"></i>
+                                        </button>
+                                        <form action="{{ route('admin.jadwal.destroy', $jadwal->id) }}" method="POST" onsubmit="return confirm('Hapus jadwal ini?')" class="inline">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-lg transition-colors">
+                                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            @empty
+                            <tr>
+                                <td colspan="5" class="px-8 py-12 text-center">
+                                    <div class="flex flex-col items-center gap-2 opacity-20">
+                                        <i data-lucide="calendar-x" class="w-8 h-8"></i>
+                                        <p class="text-[10px] font-bold uppercase tracking-widest">Belum ada agenda belajar</p>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
-                @empty
-                <div class="col-span-full py-10 rounded-xl border border-dashed border-base flex flex-col items-center justify-center gap-2 opacity-30">
-                    <i data-lucide="calendar-x" class="w-5 h-5"></i>
-                    <p class="text-[10px] font-bold uppercase tracking-widest text-center">Tidak ada jadwal</p>
-                </div>
-                @endforelse
             </div>
         </div>
         @endforeach

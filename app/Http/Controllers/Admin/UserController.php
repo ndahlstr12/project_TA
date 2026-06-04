@@ -47,6 +47,22 @@ class UserController extends Controller
                     // Lookup Kelas (In-Memory)
                     $kelasId = $kelasMap[$namaKelas] ?? null;
 
+                    // OTOMATIS: Buat kelas jika belum ada
+                    if ($namaKelas && !$kelasId) {
+                        // Parsing sederhana untuk Tingkat dan Jurusan (Contoh: X-AKL-1 atau XII RPL 1)
+                        $parts = preg_split('/[- ]/', $namaKelas);
+                        $tingkat = $parts[0] ?? 'X';
+                        $jurusan = $parts[1] ?? 'Umum';
+
+                        $newKelas = \App\Models\Kelas::create([
+                            'nama_kelas' => $namaKelas,
+                            'tingkat' => $tingkat,
+                            'jurusan' => $jurusan
+                        ]);
+                        $kelasId = $newKelas->id;
+                        $kelasMap[$namaKelas] = $kelasId; // Update map memory
+                    }
+
                     // 1. Buat Data Siswa
                     $siswa = \App\Models\Siswa::updateOrCreate(
                         ['nisn' => $nisn],
@@ -70,7 +86,7 @@ class UserController extends Controller
                             'siswa_id' => $siswa->id,
                             'role' => 'orangtua',
                             'name' => 'Orang Tua ' . $nama,
-                            'password' => Hash::make('ortu' . $nisn)
+                            'password' => Hash::make($nisn)
                         ]);
                         $existingParentAccounts[$siswa->id] = $siswa->id;
                     }
@@ -96,6 +112,7 @@ class UserController extends Controller
     {
         $role = $request->query('role');
         $search = $request->query('search');
+        $kelasId = $request->query('kelas_id');
         $query = User::query();
 
         if ($role) {
@@ -106,6 +123,12 @@ class UserController extends Controller
             }
         }
 
+        if ($kelasId && in_array($role, ['siswa', 'orangtua'])) {
+            $query->whereHas('siswa', function($q) use ($kelasId) {
+                $q->where('kelas_id', $kelasId);
+            });
+        }
+
         if ($search) {
             $query->where(function($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
@@ -114,10 +137,11 @@ class UserController extends Controller
             });
         }
 
-        $users = $query->latest()->paginate(10)->withQueryString();
+        $users = $query->with(['siswa.kelas', 'guru'])->latest()->paginate(10)->withQueryString();
         $activeTab = $role ?: 'all';
+        $kelasList = \App\Models\Kelas::orderBy('nama_kelas')->get();
 
-        return view('admin.users.index', compact('users', 'activeTab'));
+        return view('admin.users.index', compact('users', 'activeTab', 'kelasList'));
     }
 
     // Remove old separate index methods
@@ -200,7 +224,7 @@ class UserController extends Controller
                 } elseif ($validated['role'] === 'siswa') {
                     $password = $validated['nisn'];
                 } elseif ($validated['role'] === 'orangtua') {
-                    $password = 'ortu' . $validated['nisn'];
+                    $password = $validated['nisn'];
                 } else {
                     $password = 'password';
                 }

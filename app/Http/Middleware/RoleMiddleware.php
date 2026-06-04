@@ -16,9 +16,30 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next, string $role): Response
     {
-        if (!$request->user() || !$request->user()->hasRole($role)) {
-            // Redirect atau abort jika tidak punya akses
-            return redirect('/dashboard')->with('error', 'Anda tidak memiliki akses ke halaman tersebut.');
+        $roles = explode('|', $role);
+        $hasAccess = false;
+        
+        foreach ($roles as $r) {
+            if ($request->user() && $request->user()->hasRole($r)) {
+                $hasAccess = true;
+                break;
+            }
+        }
+
+        if (!$hasAccess) {
+            // Redirect ke dashboard masing-masing jika tidak punya akses
+            $user = $request->user();
+            $target = '/login';
+            
+            if ($user) {
+                if ($user->role === 'admin') $target = '/admin/dashboard';
+                elseif ($user->role === 'walikelas') $target = '/class-teacher/dashboard';
+                elseif ($user->role === 'guru') $target = '/teacher/dashboard';
+                elseif ($user->role === 'siswa') $target = '/student/dashboard';
+                elseif ($user->role === 'orangtua') $target = '/parent/dashboard';
+            }
+
+            return redirect($target)->with('error', 'Anda tidak memiliki akses ke halaman tersebut.');
         }
 
         return $next($request);

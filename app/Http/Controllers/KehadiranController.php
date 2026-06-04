@@ -16,10 +16,24 @@ class KehadiranController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+        $guru = $user->guru;
+
+        if (!$guru) {
+            return redirect()->back()->with('error', 'Data guru tidak ditemukan.');
+        }
+
         $kelasId = $request->input('kelas_id');
         
-        // Ambil daftar kelas dari tabel kelas
-        $allKelas = \App\Models\Kelas::orderBy('nama_kelas')->get();
+        // OPTIMASI: Hanya tampilkan kelas yang diajar oleh guru ini (dari jadwal)
+        // Ditambah kelas yang dia walikan
+        $taughtKelasIds = \App\Models\Jadwal::where('guru_id', $guru->id)->pluck('kelas_id')->toArray();
+        $supervisedKelasId = \App\Models\Kelas::where('wali_id', $guru->id)->pluck('id')->toArray();
+        
+        $relevantKelasIds = array_unique(array_merge($taughtKelasIds, $supervisedKelasId));
+        
+        $allKelas = \App\Models\Kelas::whereIn('id', $relevantKelasIds)
+            ->orderBy('nama_kelas')
+            ->get();
         
         $siswas = collect();
         if ($kelasId) {

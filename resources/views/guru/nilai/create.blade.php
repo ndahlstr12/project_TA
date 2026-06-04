@@ -8,7 +8,7 @@
     <div class="flex flex-col md:flex-row md:items-end justify-between gap-6 border-b border-base pb-8">
         <div>
             <div class="flex items-center gap-2 mb-2">
-                <a href="{{ route('guru.nilai.index') }}" class="p-1.5 rounded-lg border border-base hover:bg-neutral-50 dark:hover:bg-white/5 transition-all">
+                <a href="{{ route('shared.nilai.index') }}" class="p-1.5 rounded-lg border border-base hover:bg-neutral-50 dark:hover:bg-white/5 transition-all">
                     <i data-lucide="chevron-left" class="w-4 h-4 text-neutral-400"></i>
                 </a>
                 <span class="text-[10px] font-black uppercase tracking-widest text-blue-500">Input Nilai Manual</span>
@@ -18,7 +18,7 @@
         </div>
     </div>
 
-    <form action="{{ route('guru.nilai.store') }}" method="POST">
+    <form action="{{ route('shared.nilai.store') }}" method="POST">
         @csrf
         <input type="hidden" name="guru_mapel_id" value="{{ $guruMapel->id }}">
 
@@ -61,7 +61,7 @@
         </div>
 
         <div class="mt-8 flex justify-end gap-3">
-            <a href="{{ route('guru.nilai.index') }}" class="px-6 py-3 text-xs font-bold border border-base rounded-xl hover:bg-neutral-50 dark:hover:bg-white/5 transition-all">Batal</a>
+            <a href="{{ route('shared.nilai.index') }}" class="px-6 py-3 text-xs font-bold border border-base rounded-xl hover:bg-neutral-50 dark:hover:bg-white/5 transition-all">Batal</a>
             <button type="submit" class="px-8 py-3 bg-blue-500 text-white rounded-xl text-xs font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-600 transition-all">Simpan Nilai</button>
         </div>
     </form>

@@ -79,16 +79,16 @@
         }
 
         .dark {
-            /* Mode Gelap Overrides */
+            /* Mode Gelap Premium - Lebih Dalam & Kontras Tinggi */
             --nav-bg: #0f172a;
             --nav-surface: #1e293b;
             --nav-hover: #263348;
-            --nav-active-bg: rgba(29, 78, 216, 0.15);
+            --nav-active-bg: rgba(59, 130, 246, 0.15);
             --nav-text: #94a3b8;
             --nav-text-active: #f1f5f9;
-            --nav-label: #475569;
+            --nav-label: #64748b; /* Dipertajam dari #475569 */
             --nav-accent: #3b82f6;
-            --nav-border: rgba(255, 255, 255, 0.06);
+            --nav-border: rgba(255, 255, 255, 0.08);
         }
 
         body {
@@ -97,6 +97,13 @@
             min-height: 100vh;
             margin: 0;
         }
+
+        /* Utility for Dark Text Contrast */
+        .dark .text-navy-400 { color: #94a3b8; }
+        .dark .text-navy-300 { color: #64748b; }
+        .dark .text-navy-100 { color: #cbd5e1; }
+        .dark .border-base { border-color: rgba(255, 255, 255, 0.08); }
+        .dark .bg-base { background-color: rgba(255, 255, 255, 0.03); }
 
         /* ===== SIDEBAR WRAPPER ===== */
         .sidebar-wrap {
@@ -467,8 +474,8 @@
                         ]);
                     } elseif ($role === 'guru' || $role === 'walikelas') {
                         $menuItems = array_merge($menuItems, [
-                            ['label' => 'Input Kehadiran', 'icon' => 'ti-user-check', 'route' => 'guru.kehadiran.index', 'group' => 'Akademik'],
-                            ['label' => 'Manajemen Nilai', 'icon' => 'ti-book-2', 'route' => 'guru.nilai.index', 'group' => 'Akademik'],
+                            ['label' => 'Manajemen Nilai', 'icon' => 'ti-book-2', 'route' => 'shared.nilai.index', 'group' => 'Akademik'],
+                            ['label' => 'Bank Soal CBT', 'icon' => 'ti-device-laptop', 'route' => 'shared.cbt.index', 'group' => 'Akademik'],
                         ]);
                         
                         if ($role === 'walikelas') {
@@ -476,6 +483,18 @@
                             $menuItems[] = ['label' => 'Manajemen Raport', 'icon' => 'ti-file-certificate', 'route' => 'walikelas.raport.index', 'group' => 'Akademik'];
                             $menuItems[] = ['label' => 'Ranking Siswa', 'icon' => 'ti-award', 'route' => 'walikelas.ranking.index', 'group' => 'Akademik'];
                         }
+                    } elseif ($role === 'siswa') {
+                        $menuItems = array_merge($menuItems, [
+                            ['label' => 'Ujian CBT', 'icon' => 'ti-device-laptop', 'route' => 'siswa.cbt.index', 'group' => 'Akademik'],
+                            ['label' => 'Jurnal Harian', 'icon' => 'ti-notebook', 'route' => 'siswa.jurnal.index', 'group' => 'Akademik'],
+                            ['label' => 'E-Raport', 'icon' => 'ti-file-certificate', 'route' => 'siswa.raport.index', 'group' => 'Akademik'],
+                        ]);
+                    } elseif ($role === 'orangtua') {
+                        $menuItems = array_merge($menuItems, [
+                            ['label' => 'Nilai Anak', 'icon' => 'ti-book-2', 'route' => 'parent.nilai.index', 'group' => 'Info Akademik'],
+                            ['label' => 'Jurnal Perilaku', 'icon' => 'ti-notebook', 'route' => 'parent.jurnal.index', 'group' => 'Info Akademik'],
+                            ['label' => 'E-Raport', 'icon' => 'ti-file-certificate', 'route' => 'parent.raport.index', 'group' => 'Info Akademik'],
+                        ]);
                     }
                     
                     // Grouping logic

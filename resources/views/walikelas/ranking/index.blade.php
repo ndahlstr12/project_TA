@@ -16,11 +16,39 @@
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Sistem Pendukung Keputusan Berbasis Kriteria</p>
             </div>
         </div>
-        <div class="px-6 py-3 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5">
-            <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center md:text-left">Tahun Ajaran</p>
-            <p class="text-sm font-black text-slate-900 dark:text-white">2026/2027 - GENAP</p>
+        <div class="flex items-center gap-4">
+            <form action="{{ route('walikelas.ranking.generate') }}" method="POST">
+                @csrf
+                <button type="submit" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-500/25 flex items-center gap-2">
+                    <i class="ti ti-refresh"></i>
+                    Generate Ranking
+                </button>
+            </form>
+            <div class="px-6 py-3 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center md:text-left">Tahun Ajaran</p>
+                <p class="text-sm font-black text-slate-900 dark:text-white">2026/2027 - GENAP</p>
+            </div>
         </div>
     </div>
+
+    <!-- Alert Messaging -->
+    @if(session('success'))
+    <div class="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center text-white shrink-0">
+            <i class="ti ti-check text-xl"></i>
+        </div>
+        <p class="text-xs font-bold text-emerald-600 tracking-tight">{{ session('success') }}</p>
+    </div>
+    @endif
+
+    @if(session('error'))
+    <div class="p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-rose-500 flex items-center justify-center text-white shrink-0">
+            <i class="ti ti-x text-xl"></i>
+        </div>
+        <p class="text-xs font-bold text-rose-600 tracking-tight">{{ session('error') }}</p>
+    </div>
+    @endif
 
     <div class="card-pro overflow-hidden">
         <div class="overflow-x-auto">
@@ -70,7 +98,7 @@
                         <td colspan="5" class="px-6 py-16 text-center">
                             <div class="flex flex-col items-center opacity-30">
                                 <i class="ti ti-award-off text-5xl mb-4"></i>
-                                <p class="text-xs font-black uppercase tracking-widest">Data ranking belum diproses oleh Admin</p>
+                                <p class="text-xs font-black uppercase tracking-widest">Data ranking belum digenerate. Silakan klik tombol di atas.</p>
                             </div>
                         </td>
                     </tr>

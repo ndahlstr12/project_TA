@@ -15,7 +15,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(\Gemini\Client::class, function ($app) {
+            $apiKey = config('gemini.api_key');
+            
+            return \Gemini::factory()
+                ->withApiKey($apiKey)
+                ->withHttpClient(new \GuzzleHttp\Client([
+                    'verify' => false,
+                    'timeout' => config('gemini.request_timeout', 30),
+                ]))
+                ->make();
+        });
     }
 
     /**

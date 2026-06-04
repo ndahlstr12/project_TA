@@ -55,6 +55,8 @@ class User extends Authenticatable
 
     public function hasRole(string $role): bool
     {
+        if ($this->role === self::ROLE_ADMIN) return true;
+        if ($role === self::ROLE_GURU && $this->role === self::ROLE_WALIKELAS) return true;
         return $this->role === $role;
     }
 

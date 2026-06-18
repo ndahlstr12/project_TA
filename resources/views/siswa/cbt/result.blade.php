@@ -16,8 +16,12 @@
                 <div class="flex items-center gap-6">
                     <div class="text-center">
                         <p class="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em] mb-2">Skor Akhir</p>
+                        @php
+                            $mapelModel = \App\Models\Mapel::where('nama_mapel', $ujian->mapel)->first();
+                            $kkm = $mapelModel->kkm ?? 75;
+                        @endphp
                         <div class="w-24 h-24 rounded-3xl bg-white/10 flex items-center justify-center border border-white/10 backdrop-blur-md">
-                            <span class="text-4xl font-black {{ $hasil->skor >= 75 ? 'text-green-400' : 'text-rose-500' }}">{{ $hasil->skor }}</span>
+                            <span class="text-4xl font-black {{ $hasil->skor >= $kkm ? 'text-green-400' : 'text-rose-500' }}">{{ $hasil->skor }}</span>
                         </div>
                     </div>
                     <div class="text-center">

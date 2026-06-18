@@ -26,7 +26,9 @@ class KelasController extends Controller
             'nama_kelas' => 'required|string|unique:kelas,nama_kelas|max:255',
             'tingkat' => 'required|string|max:50',
             'jurusan' => 'required|string|max:100',
-            'wali_id' => 'nullable|exists:gurus,id',
+            'wali_id' => 'nullable|exists:gurus,id|unique:kelas,wali_id',
+        ], [
+            'wali_id.unique' => 'Guru ini sudah menjadi wali kelas di kelas lain.'
         ]);
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($validated) {
@@ -52,7 +54,9 @@ class KelasController extends Controller
             'nama_kelas' => 'required|string|max:255|unique:kelas,nama_kelas,' . $kela->id,
             'tingkat' => 'required|string|max:50',
             'jurusan' => 'required|string|max:100',
-            'wali_id' => 'nullable|exists:gurus,id',
+            'wali_id' => 'nullable|exists:gurus,id|unique:kelas,wali_id,' . $kela->id,
+        ], [
+            'wali_id.unique' => 'Guru ini sudah menjadi wali kelas di kelas lain.'
         ]);
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($validated, $kela) {

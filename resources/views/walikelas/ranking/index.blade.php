@@ -82,7 +82,7 @@
                         </td>
                         <td class="px-6 py-5 text-center">
                             <span class="px-3 py-1 rounded-lg bg-blue-500/10 text-blue-600 font-black text-xs">
-                                {{ number_format($rank->skor_spk, 3) }}
+                                {{ number_format($rank->skor_spk, 4) }}
                             </span>
                         </td>
                         <td class="px-6 py-5 text-right">
@@ -107,6 +107,105 @@
             </table>
         </div>
     </div>
+
+    <!-- Transparansi Algoritma SAW -->
+    @if(!empty($matrix))
+    <div x-data="{ showTransparency: false }" class="space-y-6">
+        <button @click="showTransparency = !showTransparency" class="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 hover:text-indigo-600 transition-colors">
+            <i :class="showTransparency ? 'ti ti-chevron-down' : 'ti ti-chevron-right'"></i>
+            Lihat Transparansi Perhitungan (Metode SAW)
+        </button>
+
+        <div x-show="showTransparency" x-transition class="space-y-8 pb-10">
+            <!-- Step 1: Matriks Keputusan -->
+            <div class="space-y-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500 font-bold text-xs">1</div>
+                    <h4 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">Matriks Keputusan (X)</h4>
+                </div>
+                <div class="card-pro overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs min-w-[600px]">
+                            <thead>
+                                <tr class="bg-slate-50 dark:bg-white/5 border-b border-slate-100 dark:border-white/10 font-bold text-slate-500">
+                                    <th class="px-6 py-4">Nama Siswa</th>
+                                    @foreach($kriterias as $k)
+                                    <th class="px-6 py-4 text-center">{{ $k->nama }} ({{ $k->kode }})</th>
+                                    @endforeach
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50 dark:divide-white/5">
+                                @foreach($matrix as $siswaId => $data)
+                                <tr>
+                                    <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-300">{{ $data['nama'] }}</td>
+                                    @foreach($kriterias as $k)
+                                    <td class="px-6 py-4 text-center text-slate-500">{{ number_format($data[$k->kode], 2) }}</td>
+                                    @endforeach
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 2: Matriks Normalisasi -->
+            <div class="space-y-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500 font-bold text-xs">2</div>
+                    <h4 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">Matriks Ternormalisasi (R)</h4>
+                </div>
+                <div class="card-pro overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs min-w-[600px]">
+                            <thead>
+                                <tr class="bg-slate-50 dark:bg-white/5 border-b border-slate-100 dark:border-white/10 font-bold text-slate-500">
+                                    <th class="px-6 py-4">Nama Siswa</th>
+                                    @foreach($kriterias as $k)
+                                    <th class="px-6 py-4 text-center">{{ $k->kode }} ({{ $k->jenis }})</th>
+                                    @endforeach
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-50 dark:divide-white/5">
+                                @foreach($normalized as $siswaId => $data)
+                                <tr>
+                                    <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-300">{{ $matrix[$siswaId]['nama'] }}</td>
+                                    @foreach($kriterias as $k)
+                                    <td class="px-6 py-4 text-center text-indigo-600 font-bold">{{ number_format($data[$k->kode], 4) }}</td>
+                                    @endforeach
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <p class="text-[10px] text-slate-400 italic">Rumus: Benefit (x/max), Cost (min/x)</p>
+            </div>
+
+            <!-- Step 3: Perhitungan Skor -->
+            <div class="space-y-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500 font-bold text-xs">3</div>
+                    <h4 class="text-sm font-black text-slate-800 dark:text-white uppercase tracking-tight">Bobot Kriteria (W)</h4>
+                </div>
+                <div class="flex flex-wrap gap-4">
+                    @foreach($kriterias as $k)
+                    <div class="px-4 py-3 bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 rounded-2xl flex items-center gap-3 shadow-sm">
+                        <span class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-500 flex items-center justify-center text-[10px] font-black">{{ $k->kode }}</span>
+                        <div>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{{ $k->nama }}</p>
+                            <p class="text-sm font-black text-slate-800 dark:text-white">{{ $k->bobot }}%</p>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+                <p class="text-xs text-slate-500 leading-relaxed mt-4">
+                    Skor Akhir (V<sub>i</sub>) = &Sigma; (w<sub>j</sub> * r<sub>ij</sub>)
+                </p>
+            </div>
+        </div>
+    </div>
+    @endif
 
     <!-- Info Box -->
     <div class="p-6 bg-blue-500/5 border border-blue-500/10 rounded-3xl flex gap-4">

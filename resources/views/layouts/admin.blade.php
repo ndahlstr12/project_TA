@@ -434,11 +434,6 @@
     <!-- Overlay untuk mobile -->
     <div class="fixed inset-0 bg-black/50 z-[90] hidden" :class="{ 'block': mobileSidebarOpen }" @click="mobileSidebarOpen = false"></div>
 
-    <!-- Mobile toggle button -->
-    <button class="lg:hidden fixed top-4 left-4 z-[100] bg-slate-800 border border-white/5 p-2 rounded-lg text-white" @click="mobileSidebarOpen = !mobileSidebarOpen">
-        <i class="ti ti-menu-2"></i>
-    </button>
-
     <div class="sidebar-wrap flex-shrink-0 relative" :class="{ 'mobile-open': mobileSidebarOpen }">
         <aside class="sidebar" :class="{ 'collapsed': sidebarCollapsed }">
 
@@ -457,7 +452,7 @@
             <nav class="nav-scroll">
                 @php
                     $role = Auth::user()->role;
-                    $homeRoute = $role . '.dashboard';
+                    $homeRoute = $role === 'orangtua' ? 'parent.dashboard' : $role . '.dashboard';
                     
                     $menuItems = [
                         ['label' => 'Beranda', 'icon' => 'ti-home', 'route' => $homeRoute],
@@ -475,8 +470,24 @@
                     } elseif ($role === 'guru' || $role === 'walikelas') {
                         $menuItems = array_merge($menuItems, [
                             ['label' => 'Manajemen Nilai', 'icon' => 'ti-book-2', 'route' => 'shared.nilai.index', 'group' => 'Akademik'],
-                            ['label' => 'Bank Soal CBT', 'icon' => 'ti-device-laptop', 'route' => 'shared.cbt.index', 'group' => 'Akademik'],
                         ]);
+
+                        $absensiMenu = [
+                            'label' => 'Absensi Siswa', 
+                            'icon' => 'ti-checkup-list', 
+                            'route' => 'shared.kehadiran.index',
+                            'group' => 'Akademik'
+                        ];
+
+                        if ($role === 'walikelas') {
+                            $absensiMenu['submenu'] = [
+                                ['label' => 'Input Absensi', 'icon' => 'ti-circle-check', 'route' => 'shared.kehadiran.index'],
+                                ['label' => 'Rekap Kehadiran', 'icon' => 'ti-calendar-stats', 'route' => 'walikelas.raport.attendance.bulk'],
+                            ];
+                        }
+
+                        $menuItems[] = $absensiMenu;
+                        $menuItems[] = ['label' => 'Bank Soal CBT', 'icon' => 'ti-device-laptop', 'route' => 'shared.cbt.index', 'group' => 'Akademik'];
                         
                         if ($role === 'walikelas') {
                             $menuItems[] = ['label' => 'Jurnal Perilaku', 'icon' => 'ti-notebook', 'route' => 'walikelas.jurnal.index', 'group' => 'Akademik'];
@@ -509,12 +520,34 @@
                 @if(count($items) > 0)
                 <div class="nav-section-label @if(!$loop->first) mt-2 @endif">{{ $title }}</div>
                 @foreach($items as $item)
-                <a href="{{ Route::has($item['route']) ? route($item['route']) : '#' }}" 
-                   class="nav-item {{ request()->routeIs($item['route']) ? 'active' : '' }}">
-                    <span class="nav-icon"><i class="ti {{ $item['icon'] }}"></i></span>
-                    <span class="nav-label-text">{{ $item['label'] }}</span>
-                    <span class="tooltip">{{ $item['label'] }}</span>
-                </a>
+                    @if(isset($item['submenu']))
+                        <div x-data="{ open: {{ collect($item['submenu'])->pluck('route')->contains(request()->route()->getName()) ? 'true' : 'false' }} }" class="space-y-1">
+                            <button @click="open = !open" 
+                               class="nav-item w-full flex items-center justify-between {{ collect($item['submenu'])->pluck('route')->contains(request()->route()->getName()) ? 'active' : '' }}">
+                                <div class="flex items-center gap-3">
+                                    <span class="nav-icon"><i class="ti {{ $item['icon'] }}"></i></span>
+                                    <span class="nav-label-text">{{ $item['label'] }}</span>
+                                </div>
+                                <i class="ti ti-chevron-down text-[10px] transition-transform duration-200" :class="open ? 'rotate-180' : ''"></i>
+                            </button>
+                            <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 transform -translate-y-2" x-transition:enter-end="opacity-100 transform translate-y-0" class="ml-4 pl-4 border-l border-slate-200 dark:border-white/5 space-y-1">
+                                @foreach($item['submenu'] as $sub)
+                                <a href="{{ Route::has($sub['route']) ? route($sub['route']) : '#' }}" 
+                                   class="flex items-center gap-3 px-4 py-2 rounded-lg text-xs font-bold transition-all {{ request()->routeIs($sub['route']) ? 'text-blue-500 bg-blue-500/5' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5' }}">
+                                    <i class="ti {{ $sub['icon'] }} text-sm"></i>
+                                    {{ $sub['label'] }}
+                                </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    @else
+                        <a href="{{ Route::has($item['route']) ? route($item['route']) : '#' }}" 
+                           class="nav-item {{ request()->routeIs($item['route']) ? 'active' : '' }}">
+                            <span class="nav-icon"><i class="ti {{ $item['icon'] }}"></i></span>
+                            <span class="nav-label-text">{{ $item['label'] }}</span>
+                            <span class="tooltip">{{ $item['label'] }}</span>
+                        </a>
+                    @endif
                 @endforeach
                 @endif
                 @endforeach
@@ -559,72 +592,84 @@
     <div class="main-wrapper flex-1 flex flex-col min-w-0 bg-slate-50 dark:bg-[#0b1120] transition-colors duration-300">
         
         <!-- Nav Top area -->
-        <header class="h-[72px] px-8 flex items-center justify-between shrink-0 bg-white/80 dark:bg-[#0f172a]/50 backdrop-blur-md border-b border-slate-200 dark:border-white/5 transition-colors duration-300 relative z-40">
-            <div>
-                <h2 class="text-lg font-bold text-slate-900 dark:text-white">@yield('page_title', 'Dashboard')</h2>
-                <p class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}</p>
+        <header class="h-[72px] px-4 md:px-8 flex items-center justify-between shrink-0 bg-white/80 dark:bg-[#0f172a]/50 backdrop-blur-md border-b border-slate-200 dark:border-white/5 transition-colors duration-300 relative z-40">
+            <div class="flex items-center gap-3">
+                <button class="lg:hidden w-10 h-10 flex items-center justify-center bg-slate-800 border border-white/5 rounded-xl text-white shadow-lg active:scale-95 transition-all" @click="mobileSidebarOpen = !mobileSidebarOpen">
+                    <i class="ti ti-menu-2 text-xl"></i>
+                </button>
+                <div class="min-w-0">
+                    <h2 class="text-sm md:text-lg font-bold text-slate-900 dark:text-white truncate">@yield('page_title', 'Dashboard')</h2>
+                    <p class="text-[8px] md:text-[10px] font-bold text-slate-500 uppercase tracking-widest truncate">{{ \Carbon\Carbon::now()->translatedFormat('l, d F Y') }}</p>
+                </div>
             </div>
             
-            <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2 md:gap-4">
                 <!-- Notifications -->
                 <div class="relative" x-data="{ notifOpen: false }">
-                    <button @click="notifOpen = !notifOpen" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-blue-500 transition-colors relative">
-                        <i class="ti ti-bell text-xl"></i>
+                    <button @click="notifOpen = !notifOpen" class="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-blue-500 transition-colors relative">
+                        <i class="ti ti-bell text-lg md:text-xl"></i>
                         @if(isset($unreadNotificationsCount) && $unreadNotificationsCount > 0)
-                        <span class="absolute top-2 right-2 w-4 h-4 bg-rose-500 text-white text-[9px] font-black flex items-center justify-center rounded-full border-2 border-white dark:border-[#0f172a]">
+                        <span class="absolute top-1.5 right-1.5 w-3.5 h-3.5 bg-rose-500 text-white text-[8px] font-black flex items-center justify-center rounded-full border-2 border-white dark:border-[#0f172a]">
                             {{ $unreadNotificationsCount }}
                         </span>
                         @endif
                     </button>
 
-                    <div x-show="notifOpen" @click.away="notifOpen = false" x-cloak x-transition class="absolute right-0 mt-3 w-80 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl shadow-2xl overflow-hidden z-50">
+                    <div x-show="notifOpen" @click.away="notifOpen = false" x-cloak x-transition class="absolute right-0 mt-3 w-72 md:w-80 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl shadow-2xl overflow-hidden z-50">
                         <div class="p-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
-                            <h4 class="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">Notifikasi</h4>
-                            <span class="px-2 py-0.5 bg-blue-500/10 text-blue-500 text-[9px] font-bold rounded-full">{{ $unreadNotificationsCount ?? 0 }} Baru</span>
+                            <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-white">Notifikasi</h4>
+                            <div class="flex gap-2">
+                                @if(isset($unreadNotificationsCount) && $unreadNotificationsCount > 0)
+                                <form action="{{ route('notifications.markAllRead') }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="text-[8px] font-bold text-blue-500 uppercase hover:underline">Baca Semua</button>
+                                </form>
+                                @endif
+                            </div>
                         </div>
-                        <div class="max-h-96 overflow-y-auto custom-scrollbar">
+                        <div class="max-h-80 md:max-h-96 overflow-y-auto custom-scrollbar">
                             @forelse($latestNotifications ?? [] as $notif)
-                            <div class="p-4 border-b border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                                <p class="text-[10px] font-bold text-slate-900 dark:text-white">{{ $notif->title }}</p>
-                                <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">{{ $notif->message }}</p>
-                                <p class="text-[8px] font-bold text-slate-400 uppercase mt-2 tracking-tighter">{{ $notif->created_at->diffForHumans() }}</p>
+                            <div class="p-3 md:p-4 border-b border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                                <p class="text-[9px] md:text-[10px] font-bold text-slate-900 dark:text-white">{{ $notif->title }}</p>
+                                <p class="text-[9px] md:text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">{{ $notif->message }}</p>
+                                <p class="text-[7px] md:text-[8px] font-bold text-slate-400 uppercase mt-2 tracking-tighter">{{ $notif->created_at->diffForHumans() }}</p>
                             </div>
                             @empty
-                            <div class="p-10 text-center opacity-30">
-                                <i class="ti ti-bell-off text-3xl mb-2"></i>
-                                <p class="text-[10px] font-bold uppercase tracking-widest">Tidak ada notifikasi</p>
+                            <div class="p-8 text-center opacity-30">
+                                <i class="ti ti-bell-off text-2xl mb-2"></i>
+                                <p class="text-[9px] font-bold uppercase tracking-widest">Tidak ada notifikasi</p>
                             </div>
                             @endforelse
                         </div>
                         @if(isset($latestNotifications) && $latestNotifications->count() > 0)
-                        <a href="#" class="block p-3 text-center text-[10px] font-bold text-blue-500 uppercase tracking-widest bg-slate-50/50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 transition-all">Lihat Semua</a>
+                        <a href="#" class="block p-3 text-center text-[9px] font-bold text-blue-500 uppercase tracking-widest bg-slate-50/50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 transition-all">Lihat Semua</a>
                         @endif
                     </div>
                 </div>
 
-                <button @click="toggleDarkMode()" class="w-10 h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-blue-500 transition-colors">
-                    <i x-show="!darkMode" class="ti ti-moon text-xl"></i>
-                    <i x-show="darkMode" class="ti ti-sun text-xl"></i>
+                <button @click="toggleDarkMode()" class="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-blue-500 transition-colors">
+                    <i x-show="!darkMode" class="ti ti-moon text-lg md:text-xl"></i>
+                    <i x-show="darkMode" class="ti ti-sun text-lg md:text-xl"></i>
                 </button>
 
-                <div class="w-px h-6 bg-slate-200 dark:bg-white/10 mx-1"></div>
+                <div class="hidden sm:block w-px h-6 bg-slate-200 dark:bg-white/10 mx-1"></div>
 
                 <div class="relative" x-data="{ userOpen: false }">
-                    <button @click="userOpen = !userOpen" class="flex items-center gap-3 p-1.5 pr-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 transition-all">
+                    <button @click="userOpen = !userOpen" class="flex items-center gap-2 p-1 md:p-1.5 md:pr-3 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 transition-all">
                         @if(Auth::user()->foto)
-                            <img src="{{ asset('storage/' . Auth::user()->foto) }}" class="w-9 h-9 rounded-lg object-cover shadow-sm">
+                            <img src="{{ asset('storage/' . Auth::user()->foto) }}" class="w-8 h-8 md:w-9 md:h-9 rounded-lg object-cover shadow-sm">
                         @else
                             <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=1d4ed8&color=fff" 
-                                 class="w-9 h-9 rounded-lg shadow-sm">
+                                 class="w-8 h-8 md:w-9 md:h-9 rounded-lg shadow-sm">
                         @endif
-                        <div class="hidden md:block text-left">
+                        <div class="hidden lg:block text-left">
                             <p class="text-xs font-bold text-slate-900 dark:text-white leading-none">{{ explode(' ', Auth::user()->name)[0] }}</p>
-                            <p class="text-[10px] font-bold text-blue-500 uppercase tracking-tighter mt-1">{{ str_replace('_', ' ', strtoupper(Auth::user()->role)) }}</p>
+                            <p class="text-[9px] font-bold text-blue-500 uppercase tracking-tighter mt-1">{{ str_replace('_', ' ', strtoupper(Auth::user()->role)) }}</p>
                         </div>
-                        <i class="ti ti-chevron-down text-xs text-slate-400 transition-transform" :class="userOpen ? 'rotate-180' : ''"></i>
+                        <i class="ti ti-chevron-down text-[10px] text-slate-400 transition-transform hidden sm:block" :class="userOpen ? 'rotate-180' : ''"></i>
                     </button>
                     
-                    <div x-show="userOpen" @click.away="userOpen = false" x-cloak x-transition class="absolute right-0 mt-3 w-56 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl shadow-2xl p-2 z-50">
+                    <div x-show="userOpen" @click.away="userOpen = false" x-cloak x-transition class="absolute right-0 mt-3 w-48 md:w-56 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl shadow-2xl p-2 z-50">
                         <a href="{{ route('profile.index') }}" class="flex items-center gap-3 px-4 py-2.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5 rounded-xl transition-all">
                             <i class="ti ti-user text-base text-blue-500"></i> Profil Saya
                         </a>
@@ -640,7 +685,7 @@
         </header>
 
         <!-- Scrollable Content -->
-        <main class="flex-1 overflow-y-auto custom-scrollbar p-8">
+        <main class="flex-1 overflow-y-auto custom-scrollbar p-4 md:p-8">
             <div class="max-w-7xl mx-auto">
                 {{-- Flash Messages --}}
                 @if(session('success'))

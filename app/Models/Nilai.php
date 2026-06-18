@@ -12,11 +12,17 @@ class Nilai extends Model
     protected $fillable = [
         'siswa_id',
         'guru_id',
-        'mapel',
+        'mapel_id',
         'nilai_angka',
+        'capaian_kompetensi',
         'semester',
         'tahun_ajaran'
     ];
+
+    public function mapel()
+    {
+        return $this->belongsTo(Mapel::class);
+    }
 
     public function siswa()
     {

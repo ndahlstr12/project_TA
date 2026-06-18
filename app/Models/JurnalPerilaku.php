@@ -9,7 +9,11 @@ class JurnalPerilaku extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['siswa_id', 'guru_id', 'catatan', 'poin', 'tipe', 'tanggal'];
+    protected $fillable = ['siswa_id', 'guru_id', 'catatan', 'rekomendasi', 'poin', 'tipe', 'tanggal'];
+
+    protected $casts = [
+        'tanggal' => 'date',
+    ];
 
     public function siswa()
     {

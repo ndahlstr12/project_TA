@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\JurnalPerilaku;
 use App\Models\Siswa;
 use App\Models\Kelas;
+use App\Models\Notification;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -39,21 +41,45 @@ class JurnalPerilakuController extends Controller
         $request->validate([
             'siswa_id' => 'required|exists:siswas,id',
             'catatan' => 'required|string',
+            'rekomendasi' => 'nullable|string',
             'tipe' => 'required|in:Positif,Negatif',
             'poin' => 'required|integer',
             'tanggal' => 'required|date',
         ]);
 
-        JurnalPerilaku::create([
+        $jurnal = JurnalPerilaku::create([
             'siswa_id' => $request->siswa_id,
             'guru_id' => Auth::user()->guru_id,
             'catatan' => $request->catatan,
+            'rekomendasi' => $request->rekomendasi,
             'tipe' => $request->tipe,
             'poin' => $request->poin,
             'tanggal' => $request->tanggal,
         ]);
 
+        // Kirim Notifikasi ke Orang Tua
+        $this->sendNotificationToParent($jurnal);
+
         return redirect()->back()->with('success', 'Jurnal perilaku berhasil disimpan.');
+    }
+
+    private function sendNotificationToParent($jurnal)
+    {
+        $siswa = Siswa::find($jurnal->siswa_id);
+        if (!$siswa) return;
+
+        $parentUser = User::where('siswa_id', $siswa->id)->where('role', 'orangtua')->first();
+        
+        if ($parentUser) {
+            $tipeLabel = $jurnal->tipe === 'Negatif' ? 'Permasalahan/Catatan Negatif' : 'Apresiasi/Catatan Positif';
+            Notification::create([
+                'user_id' => $parentUser->id,
+                'title' => "Catatan Perilaku Baru: " . $siswa->nama,
+                'message' => "Ada {$tipeLabel} baru untuk {$siswa->nama}. Silakan cek menu Jurnal Perilaku.",
+                'type' => 'behavior',
+                'penerima' => 'Ortu'
+            ]);
+        }
     }
 
     public function update(Request $request, $id)
@@ -68,6 +94,7 @@ class JurnalPerilakuController extends Controller
         $request->validate([
             'siswa_id' => 'required|exists:siswas,id',
             'catatan' => 'required|string',
+            'rekomendasi' => 'nullable|string',
             'tipe' => 'required|in:Positif,Negatif',
             'poin' => 'required|integer',
             'tanggal' => 'required|date',
@@ -76,6 +103,7 @@ class JurnalPerilakuController extends Controller
         $jurnal->update([
             'siswa_id' => $request->siswa_id,
             'catatan' => $request->catatan,
+            'rekomendasi' => $request->rekomendasi,
             'tipe' => $request->tipe,
             'poin' => $request->poin,
             'tanggal' => $request->tanggal,

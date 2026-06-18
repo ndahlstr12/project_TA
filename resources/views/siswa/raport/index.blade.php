@@ -52,9 +52,9 @@
                 </div>
 
                 <div class="pt-4 flex gap-3">
-                    <a href="{{ route('walikelas.raport.export-pdf', $raport->id) }}" class="flex-1 py-3 bg-rose-600 text-white text-[10px] font-bold rounded-xl uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-rose-700 shadow-lg shadow-rose-600/20 transition-all">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i>
-                        Unduh PDF
+                    <a href="{{ route('siswa.raport.show', $raport->id) }}" class="w-full py-3 bg-indigo-600 text-white text-[10px] font-bold rounded-xl uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 transition-all">
+                        <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                        Lihat Raport Digital
                     </a>
                 </div>
             </div>

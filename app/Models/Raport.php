@@ -13,6 +13,7 @@ class Raport extends Model
         'siswa_id',
         'wali_id',
         'catatan_wali',
+        'kokurikuler',
         'sakit',
         'izin',
         'alpa',

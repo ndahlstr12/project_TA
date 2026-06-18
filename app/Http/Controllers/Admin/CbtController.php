@@ -14,14 +14,43 @@ class CbtController extends Controller
     // 1. Daftar Semua Paket Ujian (Halaman Utama Bank Soal)
     public function index()
     {
-        $ujians = CbtUjian::withCount('soals')->latest()->get();
+        $user = auth()->user();
+        $query = CbtUjian::withCount('soals')->latest();
+
+        // Jika bukan admin, filter berdasarkan mata pelajaran yang diampu guru
+        if ($user->role !== 'admin') {
+            $guru = $user->guru;
+            if ($guru) {
+                $mapelNames = $guru->mapels()->with('mapel')->get()->pluck('mapel.nama_mapel')->unique();
+                $query->whereIn('mapel', $mapelNames);
+            } else {
+                // Jika user tidak punya profil guru (dan bukan admin), jangan tampilkan apapun
+                $query->whereRaw('1 = 0');
+            }
+        }
+
+        $ujians = $query->get();
         return view('guru.cbt.index', compact('ujians'));
     }
 
     // 2. Form Buat Paket Ujian Baru (Sekaligus Pengaturan)
     public function create()
     {
-        return view('guru.cbt.create');
+        $user = auth()->user();
+        $mapels = collect();
+        $kelas = collect();
+
+        if ($user->role !== 'admin' && $user->guru) {
+            $guru = $user->guru;
+            $mapels = $guru->mapels()->with('mapel')->get()->pluck('mapel.nama_mapel')->unique();
+            $kelas = $guru->mapels()->with('kelas')->get()->pluck('kelas.nama_kelas')->unique();
+        } else {
+            // Untuk admin, ambil semua data (atau sesuaikan kebutuhan)
+            $mapels = \App\Models\Mapel::pluck('nama_mapel');
+            $kelas = \App\Models\Kelas::pluck('nama_kelas');
+        }
+
+        return view('guru.cbt.create', compact('mapels', 'kelas'));
     }
 
     // 3. Simpan Paket Ujian

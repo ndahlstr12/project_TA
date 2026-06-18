@@ -74,6 +74,12 @@
 
                 <div class="px-8 py-6 bg-slate-50/50 dark:bg-white/5 border-t border-slate-100 dark:border-white/5">
                     @if($hasil)
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Status</span>
+                            <span class="text-[10px] font-black uppercase tracking-widest @if($hasil->status == 'Remedial') text-rose-500 @else text-emerald-500 @endif">
+                                {{ $hasil->status }}
+                            </span>
+                        </div>
                         <div class="flex items-center justify-between mb-4">
                             <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Skor Akhir</span>
                             <span class="text-xl font-black text-rose-600">{{ round($hasil->skor) }}</span>

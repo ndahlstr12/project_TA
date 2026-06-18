@@ -79,10 +79,15 @@
                                 "
                                 class="text-[10px] font-black text-blue-500 hover:text-blue-600 flex items-center gap-1 uppercase tracking-tighter disabled:opacity-50">
                                 <i class="ti ti-sparkles" :class="loadingAi ? 'animate-spin' : ''"></i>
-                                <span x-text="loadingAi ? 'Sedang Memproses...' : 'Minta Saran AI'"></span>
+                                <span x-text="loadingAi ? 'Minta Saran AI' : 'Minta Saran AI'"></span>
                             </button>
                         </div>
-                        <textarea id="catatan_input" name="catatan" rows="4" class="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="Tuliskan kejadian atau perilaku siswa..." required></textarea>
+                        <textarea id="catatan_input" name="catatan" rows="3" class="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="Tuliskan kejadian atau perilaku siswa..." required></textarea>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Saran / Rekomendasi Penanganan</label>
+                        <textarea id="rekomendasi_input" name="rekomendasi" rows="3" class="w-full bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm font-medium focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="Saran untuk orang tua atau langkah penanganan..."></textarea>
                     </div>
 
                     <button type="submit" class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2">
@@ -287,18 +292,18 @@
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
-                            <button @click="showAiModal = false" class="py-3 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-white/10 transition-all">Tutup</button>
-                            <button @click="document.getElementById('catatan_input').value = aiRecommendation; showAiModal = false;" 
-                                    x-show="aiRecommendation"
-                                    class="py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all">
-                                Gunakan Saran Ini
-                            </button>
+                        <button @click="showAiModal = false" class="py-3 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 dark:hover:bg-white/10 transition-all">Tutup</button>
+                        <button @click="document.getElementById('rekomendasi_input').value = aiRecommendation; showAiModal = false;" 
+                            x-show="aiRecommendation"
+                            class="py-3 bg-blue-600 text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-blue-700 shadow-lg shadow-blue-600/20 transition-all">
+                        Gunakan Saran Ini
+                        </button>
                         </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </template>
+                        </div>
+                        </div>
+                        </div>
+                        </div>
+                        </template>
 
-</div>
-@endsection
+                        </div>
+                        @endsection

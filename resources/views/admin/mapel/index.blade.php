@@ -4,7 +4,7 @@
 @section('page_title', 'Data Mata Pelajaran')
 
 @section('content')
-<div x-data="{ modal: null, currentMapel: { id: '', nama_mapel: '', kode_mapel: '' } }" class="space-y-8">
+<div x-data="{ modal: null, currentMapel: { id: '', nama_mapel: '', kode_mapel: '', kategori: 'Umum', kkm: 70 } }" class="space-y-8">
     
     <!-- Header -->
     <div class="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
@@ -31,6 +31,8 @@
                         <th class="px-6 py-5 w-20 text-center">No</th>
                         <th class="px-6 py-5">Kode Mapel</th>
                         <th class="px-6 py-5">Nama Mata Pelajaran</th>
+                        <th class="px-6 py-5">Kategori</th>
+                        <th class="px-6 py-5 text-center">KKM</th>
                         <th class="px-6 py-5 text-right">Aksi</th>
                     </tr>
                 </thead>
@@ -46,8 +48,16 @@
                         <td class="px-6 py-5">
                             <span class="text-sm font-bold text-slate-900 dark:text-white">{{ $mapel->nama_mapel }}</span>
                         </td>
+                        <td class="px-6 py-5">
+                            <span class="px-3 py-1 rounded-lg {{ $mapel->kategori == 'Umum' ? 'bg-blue-500/10 text-blue-500' : 'bg-purple-500/10 text-purple-500' }} font-black text-[10px] uppercase tracking-wider">
+                                {{ $mapel->kategori }}
+                            </span>
+                        </td>
+                        <td class="px-6 py-5 text-center">
+                            <span class="text-sm font-bold text-slate-600 dark:text-slate-400">{{ $mapel->kkm ?? 70 }}</span>
+                        </td>
                         <td class="px-6 py-5 text-right flex justify-end gap-2">
-                            <button @click="modal = 'edit'; currentMapel = { id: '{{ $mapel->id }}', nama_mapel: '{{ $mapel->nama_mapel }}', kode_mapel: '{{ $mapel->kode_mapel }}' }" 
+                            <button @click="modal = 'edit'; currentMapel = { id: '{{ $mapel->id }}', nama_mapel: '{{ $mapel->nama_mapel }}', kode_mapel: '{{ $mapel->kode_mapel }}', kategori: '{{ $mapel->kategori }}', kkm: '{{ $mapel->kkm ?? 70 }}' }" 
                                     class="p-2 bg-amber-500/10 text-amber-600 hover:bg-amber-500 hover:text-white rounded-lg transition-all">
                                 <i class="ti ti-edit text-base"></i>
                             </button>
@@ -62,7 +72,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="4" class="px-6 py-16 text-center">
+                        <td colspan="5" class="px-6 py-16 text-center">
                             <div class="flex flex-col items-center opacity-30">
                                 <i class="ti ti-book-off text-5xl mb-4"></i>
                                 <p class="text-[10px] font-black uppercase tracking-widest text-slate-500">Belum ada data mata pelajaran</p>
@@ -95,6 +105,17 @@
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Mata Pelajaran</label>
                         <input type="text" name="nama_mapel" placeholder="Contoh: Matematika" class="w-full px-5 py-3.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-blue-500/20 outline-none transition-all" required>
                     </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kategori</label>
+                        <select name="kategori" class="w-full px-5 py-3.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-blue-500/20 outline-none transition-all" required>
+                            <option value="Umum">Umum</option>
+                            <option value="Kejuruan">Kejuruan</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nilai KKM</label>
+                        <input type="number" name="kkm" placeholder="70" class="w-full px-5 py-3.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-blue-500/20 outline-none transition-all" min="0" max="100">
+                    </div>
                     <div class="flex gap-3 pt-4">
                         <button type="button" @click="modal = null" class="flex-1 py-3.5 text-xs font-black text-slate-400 uppercase tracking-widest">Batal</button>
                         <button type="submit" class="flex-1 py-3.5 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-blue-500/20 hover:bg-blue-700 transition-all active:scale-95">Simpan Data</button>
@@ -123,6 +144,17 @@
                     <div class="space-y-2">
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nama Mata Pelajaran</label>
                         <input type="text" name="nama_mapel" x-model="currentMapel.nama_mapel" class="w-full px-5 py-3.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-blue-500/20 outline-none transition-all" required>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Kategori</label>
+                        <select name="kategori" x-model="currentMapel.kategori" class="w-full px-5 py-3.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-blue-500/20 outline-none transition-all" required>
+                            <option value="Umum">Umum</option>
+                            <option value="Kejuruan">Kejuruan</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Nilai KKM</label>
+                        <input type="number" name="kkm" x-model="currentMapel.kkm" class="w-full px-5 py-3.5 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl text-sm font-bold focus:ring-2 focus:ring-blue-500/20 outline-none transition-all" min="0" max="100">
                     </div>
                     <div class="flex gap-3 pt-4">
                         <button type="button" @click="modal = null" class="flex-1 py-3.5 text-xs font-black text-slate-400 uppercase tracking-widest">Batal</button>

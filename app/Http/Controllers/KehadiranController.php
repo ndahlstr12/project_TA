@@ -22,51 +22,62 @@ class KehadiranController extends Controller
             return redirect()->back()->with('error', 'Data guru tidak ditemukan.');
         }
 
-        $kelasId = $request->input('kelas_id');
+        $jadwalId = $request->input('jadwal_id');
         
-        // OPTIMASI: Hanya tampilkan kelas yang diajar oleh guru ini (dari jadwal)
-        // Ditambah kelas yang dia walikan
-        $taughtKelasIds = \App\Models\Jadwal::where('guru_id', $guru->id)->pluck('kelas_id')->toArray();
-        $supervisedKelasId = \App\Models\Kelas::where('wali_id', $guru->id)->pluck('id')->toArray();
-        
-        $relevantKelasIds = array_unique(array_merge($taughtKelasIds, $supervisedKelasId));
-        
-        $allKelas = \App\Models\Kelas::whereIn('id', $relevantKelasIds)
-            ->orderBy('nama_kelas')
+        // Ambil jadwal yang diampu oleh guru ini
+        $allJadwal = \App\Models\Jadwal::with(['mapel', 'kelas'])
+            ->where('guru_id', $guru->id)
             ->get();
         
         $siswas = collect();
-        if ($kelasId) {
+        $selectedJadwal = null;
+        $kelasId = null;
+
+        if ($jadwalId) {
+            $selectedJadwal = \App\Models\Jadwal::with('kelas')->findOrFail($jadwalId);
+            $kelasId = $selectedJadwal->kelas_id;
             $siswas = Siswa::where('kelas_id', $kelasId)->get();
             
-            // Ambil data kehadiran hari ini untuk kelas tersebut
+            // Ambil data kehadiran hari ini untuk jadwal tersebut
             $today = Carbon::today()->toDateString();
             foreach ($siswas as $siswa) {
                 $kehadiran = Kehadiran::where('siswa_id', $siswa->id)
+                    ->where('jadwal_id', $jadwalId)
                     ->where('tanggal', $today)
                     ->first();
                 $siswa->kehadiran_hari_ini = $kehadiran;
             }
         }
 
-        return view('guru.kehadiran.index', compact('allKelas', 'siswas', 'kelasId'));
+        return view('guru.kehadiran.index', compact('allJadwal', 'siswas', 'jadwalId', 'selectedJadwal', 'kelasId'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'siswa_id' => 'required|exists:siswas,id',
+            'jadwal_id' => 'nullable|exists:jadwals,id',
             'status' => 'required|in:Hadir,Izin,Sakit,Alpa',
             'menit_terlambat' => 'nullable|integer|min:0',
             'keterangan' => 'nullable|string',
         ]);
 
+        // Keamanan: Cek apakah jadwal ini milik guru yang login
+        if ($request->jadwal_id) {
+            $jadwal = \App\Models\Jadwal::findOrFail($request->jadwal_id);
+            if ($jadwal->guru_id !== Auth::user()->guru_id) {
+                return response()->json(['success' => false, 'message' => 'Akses ditolak.'], 403);
+            }
+        }
+
         $today = Carbon::today()->toDateString();
-        $siswa = Siswa::with('kelas')->findOrFail($request->siswa_id);
+        // Eager load kelas, waliKelas, dan user untuk akurasi data
+        $siswa = Siswa::with(['kelas.waliKelas.user'])->findOrFail($request->siswa_id);
 
         $kehadiran = Kehadiran::updateOrCreate(
             [
                 'siswa_id' => $request->siswa_id,
+                'jadwal_id' => $request->jadwal_id,
                 'tanggal' => $today,
             ],
             [
@@ -143,22 +154,21 @@ class KehadiranController extends Controller
                 'user_id' => $guruWali->user->id,
                 'title' => $title,
                 'message' => $message,
-                'type' => 'attendance'
+                'type' => 'attendance',
+                'penerima' => 'Wali Kelas'
             ]);
         }
 
         // 2. Notifikasi ke Orang Tua
-        $userSiswa = User::where('siswa_id', $siswa->id)->where('role', 'siswa')->first();
-        if ($userSiswa) {
-            $parentUser = User::where('siswa_id', $siswa->id)->where('role', 'orangtua')->first();
-            if ($parentUser) {
-                Notification::create([
-                    'user_id' => $parentUser->id,
-                    'title' => $title,
-                    'message' => $message,
-                    'type' => 'attendance'
-                ]);
-            }
+        $parentUser = User::where('siswa_id', $siswa->id)->where('role', 'orangtua')->first();
+        if ($parentUser) {
+            Notification::create([
+                'user_id' => $parentUser->id,
+                'title' => $title,
+                'message' => $message,
+                'type' => 'attendance',
+                'penerima' => 'Ortu'
+            ]);
         }
     }
 }

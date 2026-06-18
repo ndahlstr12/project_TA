@@ -28,9 +28,10 @@
                     <thead>
                         <tr class="bg-neutral-50/30 dark:bg-white/5 border-b border-base text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
                             <th class="px-8 py-4 w-16">No</th>
-                            <th class="px-8 py-4">Siswa</th>
+                            <th class="px-8 py-4 w-1/4">Siswa</th>
                             <th class="px-8 py-4">NISN</th>
-                            <th class="px-8 py-4 text-center">Nilai Angka (0-100)</th>
+                            <th class="px-8 py-4 text-center">Nilai Angka</th>
+                            <th class="px-8 py-4">Capaian Kompetensi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-base">
@@ -41,17 +42,23 @@
                                 <p class="text-sm font-bold text-neutral-800 dark:text-neutral-200 tracking-tight">{{ $siswa->nama }}</p>
                             </td>
                             <td class="px-8 py-4 text-xs font-mono font-bold text-neutral-400">{{ $siswa->nisn }}</td>
-                            <td class="px-8 py-4 flex justify-center">
-                                <div class="w-24">
+                            <td class="px-8 py-4">
+                                <div class="w-24 mx-auto">
                                     <input type="number" 
                                            name="nilai[{{ $siswa->id }}]" 
                                            step="0.01" 
                                            min="0" 
                                            max="100" 
                                            value="{{ $existingNilai->has($siswa->id) ? $existingNilai[$siswa->id]->nilai_angka : '' }}"
-                                           placeholder="..."
+                                           placeholder="0"
                                            class="w-full bg-white dark:bg-white/5 border border-base rounded-xl px-4 py-2 text-center text-sm font-bold focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none">
                                 </div>
+                            </td>
+                            <td class="px-8 py-4">
+                                <textarea name="capaian[{{ $siswa->id }}]" 
+                                          rows="2" 
+                                          placeholder="Deskripsi capaian kompetensi..."
+                                          class="w-full bg-white dark:bg-white/5 border border-base rounded-xl px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all outline-none">{{ $existingNilai->has($siswa->id) ? $existingNilai[$siswa->id]->capaian_kompetensi : '' }}</textarea>
                             </td>
                         </tr>
                         @endforeach

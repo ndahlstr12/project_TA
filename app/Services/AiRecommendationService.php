@@ -13,7 +13,7 @@ class AiRecommendationService
      * Memanggil API Gemini menggunakan Laravel Http Client (Metode Raw).
      * Menggunakan model yang terkonfirmasi ada berdasarkan hasil ModelService.ListModels.
      */
-    private function callGemini($prompt)
+    private function callGemini($prompt, $imagePath = null)
     {
         $apiKey = config('gemini.api_key');
         
@@ -21,14 +21,9 @@ class AiRecommendationService
             throw new \Exception("API Key Gemini belum diatur di file .env");
         }
 
-        // Daftar model yang terkonfirmasi tersedia untuk API Key Anda (Hasil Diagnosa)
         $models = [
             'gemini-1.5-flash',
             'gemini-flash-latest',
-            'gemini-3.5-flash',
-            'gemini-2.5-flash',
-            'gemini-2.0-flash',
-            'gemini-pro-latest'
         ];
 
         $lastErrorMessage = "";
@@ -37,37 +32,124 @@ class AiRecommendationService
             $url = "https://generativelanguage.googleapis.com/v1beta/models/{$modelName}:generateContent?key=" . $apiKey;
             
             try {
-                Log::info("Trying Gemini Model: {$modelName}...");
+                $parts = [['text' => $prompt]];
+
+                if ($imagePath && file_exists($imagePath)) {
+                    $imageData = base64_encode(file_get_contents($imagePath));
+                    $mimeType = mime_content_type($imagePath);
+                    $parts[] = [
+                        'inline_data' => [
+                            'mime_type' => $mimeType,
+                            'data' => $imageData
+                        ]
+                    ];
+                }
 
                 $response = Http::withoutVerifying()
                     ->withHeaders(['Content-Type' => 'application/json'])
-                    ->timeout(20)
+                    ->timeout(30)
                     ->post($url, [
-                        'contents' => [['parts' => [['text' => $prompt]]]]
+                        'contents' => [['parts' => $parts]]
                     ]);
 
                 if ($response->successful()) {
                     $data = $response->json();
                     $text = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
                     if ($text) {
-                        Log::info("Success using model: {$modelName}");
                         return $text;
                     }
                 }
 
                 $errorData = $response->json();
-                $message = $errorData['error']['message'] ?? "Unknown Error";
-                
-                Log::warning("Model {$modelName} failed: " . $message);
-                $lastErrorMessage = $message;
-
+                $lastErrorMessage = $errorData['error']['message'] ?? "Unknown Error";
             } catch (\Exception $e) {
-                Log::error("Connection failed for model {$modelName}: " . $e->getMessage());
                 $lastErrorMessage = $e->getMessage();
             }
         }
 
-        throw new \Exception("AI tidak merespon. Error terakhir: " . $lastErrorMessage);
+        throw new \Exception("AI tidak merespon. Error: " . $lastErrorMessage);
+    }
+
+    /**
+     * Memvalidasi apakah file yang diunggah benar-benar merupakan tanda tangan.
+     */
+    public function validateSignature($imagePath)
+    {
+        try {
+            $prompt = "Analisis gambar ini. Apakah ini adalah sebuah tanda tangan (signature)?
+            Berikan jawaban 'TRUE' jika ini benar-benar tanda tangan manual (coretan tangan), 
+            atau 'FALSE' jika ini adalah foto orang, pemandangan, dokumen penuh teks, logo berwarna, atau gambar lainnya yang bukan tanda tangan.
+            Jawab HANYA dengan kata 'TRUE' atau 'FALSE'.";
+
+            $hasil = trim(strtoupper($this->callGemini($prompt, $imagePath)));
+
+            return str_contains($hasil, 'TRUE');
+        } catch (\Exception $e) {
+            Log::error('Signature Validation Error: ' . $e->getMessage());
+            // Jika AI gagal (limit/error), kita kembalikan true agar tidak menghambat user
+            return true; 
+        }
+    }
+
+    /**
+     * Menghasilkan catatan wali kelas otomatis berdasarkan nilai, kehadiran, perilaku, dan ekskul.
+     */
+    public function generateWaliCatatan($siswa, $nilais, $kehadiran, $jurnals, $ekskuls)
+    {
+        try {
+            // Persiapkan data nilai untuk AI
+            $ringkasanNilai = $nilais->map(function($n) {
+                return "{$n->mapel->nama_mapel}: {$n->nilai_akhir}";
+            })->implode(', ');
+
+            // Persiapkan data kehadiran
+            $sakit = $kehadiran->where('keterangan', 'sakit')->count();
+            $izin = $kehadiran->where('keterangan', 'izin')->count();
+            $alpa = $kehadiran->where('keterangan', 'alpa')->count();
+            $absensi = "Sakit: $sakit, Izin: $izin, Alpa: $alpa";
+
+            // Persiapkan data perilaku
+            $ringkasanPerilaku = $jurnals->map(function($j) {
+                return "[{$j->tipe}] {$j->catatan}";
+            })->implode('; ');
+
+            // Persiapkan data ekstrakurikuler
+            $ringkasanEkskul = $ekskuls->map(function($e) {
+                return "{$e->nama_ekstra}: {$e->keterangan}";
+            })->implode('; ');
+
+            $prompt = "Bertindaklah sebagai Wali Kelas yang bijaksana. Buatlah Catatan Wali Kelas untuk raport siswa berikut berdasarkan data objektif:
+            
+            Nama Siswa: {$siswa->nama}
+            Data Nilai: {$ringkasanNilai}
+            Data Kehadiran: {$absensi}
+            Catatan Perilaku: " . ($ringkasanPerilaku ?: 'Tidak ada catatan perilaku khusus') . "
+            Kegiatan Ekstrakurikuler: " . ($ringkasanEkskul ?: 'Tidak mengikuti ekstrakurikuler khusus') . "
+            
+            Tugas:
+            1. Analisis performa akademisnya.
+            2. Hubungkan dengan tingkat kehadiran, perilakunya, dan keaktifannya di kegiatan ekstrakurikuler.
+            3. Berikan kalimat motivasi yang personal.
+            
+            Ketentuan:
+            - Gunakan Bahasa Indonesia yang formal namun hangat.
+            - Maksimal 3-4 kalimat pendek.
+            - Jangan menggunakan kata-kata teknis AI.";
+
+            $hasilAi = $this->callGemini($prompt);
+
+            return [
+                'success' => true,
+                'data' => $hasilAi
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('AI Wali Catatan Error: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Gagal generate catatan: ' . $e->getMessage()
+            ];
+        }
     }
 
     /**

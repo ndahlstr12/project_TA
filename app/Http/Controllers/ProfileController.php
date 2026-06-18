@@ -8,8 +8,17 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules\Password;
 
+use App\Services\AiRecommendationService;
+
 class ProfileController extends Controller
 {
+    protected $aiService;
+
+    public function __construct(AiRecommendationService $aiService)
+    {
+        $this->aiService = $aiService;
+    }
+
     public function index()
     {
         $user = Auth::user();
@@ -44,6 +53,30 @@ class ProfileController extends Controller
         }
 
         $user->update($data);
+
+        // Jika user adalah guru atau walikelas, handle Tanda Tangan Digital
+        if (($user->role === 'guru' || $user->role === 'walikelas') && $user->guru) {
+            $request->validate([
+                'ttd_digital' => ['nullable', 'image', 'mimes:png', 'max:1024'],
+            ]);
+
+            if ($request->hasFile('ttd_digital')) {
+                // Validasi AI: Apakah ini benar-benar tanda tangan?
+                $isSignature = $this->aiService->validateSignature($request->file('ttd_digital')->path());
+                
+                if (!$isSignature) {
+                    return back()->with('error', 'Gagal memperbarui TTD: Sistem mendeteksi gambar yang Anda unggah bukan merupakan tanda tangan manual. Silakan unggah gambar tanda tangan yang jelas dengan format PNG.');
+                }
+
+                // Hapus TTD lama jika ada
+                if ($user->guru->ttd_digital) {
+                    Storage::disk('public')->delete($user->guru->ttd_digital);
+                }
+                
+                $ttdPath = $request->file('ttd_digital')->store('ttd-digital', 'public');
+                $user->guru->update(['ttd_digital' => $ttdPath]);
+            }
+        }
 
         // Jika user adalah siswa atau orang tua, update email ortu di tabel siswas
         if (($user->role === 'siswa' || $user->role === 'orangtua') && $user->siswa) {

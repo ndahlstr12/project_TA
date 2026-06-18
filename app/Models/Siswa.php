@@ -11,6 +11,7 @@ class Siswa extends Model
 {
     protected $fillable = [
         'nisn', 
+        'nis',
         'nama', 
         'orang_tua_id', 
         'kelas_id', 
@@ -43,5 +44,10 @@ class Siswa extends Model
     public function rankings(): HasMany
     {
         return $this->hasMany(SpkRanking::class);
+    }
+
+    public function ekstrakurikulers(): HasMany
+    {
+        return $this->hasMany(Ekstrakurikuler::class);
     }
 }

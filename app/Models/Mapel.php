@@ -9,7 +9,7 @@ class Mapel extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nama_mapel', 'kode_mapel'];
+    protected $fillable = ['nama_mapel', 'kode_mapel', 'kategori', 'kkm'];
 
     public function guruMapels()
     {

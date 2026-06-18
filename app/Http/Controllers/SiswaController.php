@@ -124,7 +124,12 @@ class SiswaController extends Controller
         $totalSoalDitampilkan = count($answers);
         $skor = $totalSoalDitampilkan > 0 ? ($jumlahBenar / $totalSoalDitampilkan) * 100 : 0;
         $jumlahSalah = $totalSoalDitampilkan - $jumlahBenar;
-        $status = $skor >= 75 ? 'Selesai' : 'Remedial';
+        
+        // Ambil KKM dari Mapel
+        $mapel = \App\Models\Mapel::where('nama_mapel', $ujian->mapel)->first();
+        $kkm = $mapel->kkm ?? 75; // Default 75 jika mapel tidak ditemukan
+
+        $status = $skor >= $kkm ? 'Selesai' : 'Remedial';
 
         CbtHasil::updateOrCreate(
             ['cbt_ujian_id' => $id, 'siswa_id' => $siswa->id],
@@ -133,7 +138,7 @@ class SiswaController extends Controller
                 'jumlah_benar' => $jumlahBenar,
                 'jumlah_salah' => $jumlahSalah,
                 'status' => $status,
-                'rekomendasi_ai' => $status === 'Remedial' ? 'Siswa disarankan untuk mempelajari kembali materi ' . $ujian->mapel . '.' : 'Siswa telah menguasai materi.'
+                'rekomendasi_ai' => $status === 'Remedial' ? 'Siswa disarankan untuk mempelajari kembali materi ' . $ujian->mapel . ' karena belum mencapai KKM (' . $kkm . ').' : 'Siswa telah menguasai materi dengan baik.'
             ]
         );
 

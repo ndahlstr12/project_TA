@@ -19,6 +19,8 @@ class MapelController extends Controller
         $request->validate([
             'nama_mapel' => 'required|string|max:255',
             'kode_mapel' => 'required|string|max:20|unique:mapels,kode_mapel',
+            'kategori' => 'required|in:Umum,Kejuruan',
+            'kkm' => 'nullable|integer|min:0|max:100',
         ]);
 
         Mapel::create($request->all());
@@ -31,6 +33,8 @@ class MapelController extends Controller
         $request->validate([
             'nama_mapel' => 'required|string|max:255',
             'kode_mapel' => 'required|string|max:20|unique:mapels,kode_mapel,' . $mapel->id,
+            'kategori' => 'required|in:Umum,Kejuruan',
+            'kkm' => 'nullable|integer|min:0|max:100',
         ]);
 
         $mapel->update($request->all());

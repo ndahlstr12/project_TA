@@ -32,6 +32,15 @@
     </div>
     @endif
 
+    @if(session('error'))
+    <div class="p-4 bg-rose-500/10 border border-rose-500/20 rounded-xl flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-rose-500 flex items-center justify-center text-white">
+            <i data-lucide="alert-circle" class="w-4 h-4"></i>
+        </div>
+        <p class="text-xs font-bold text-rose-600 tracking-tight">{{ session('error') }}</p>
+    </div>
+    @endif
+
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
         <!-- Profile Card -->
         <div class="lg:col-span-1 space-y-6">
@@ -144,6 +153,53 @@
                     </div>
                     @endif
 
+                    @if(($user->role === 'guru' || $user->role === 'walikelas') && $user->guru)
+                    <div class="space-y-4 pt-4 border-t border-base">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i data-lucide="signature" class="w-4 h-4 text-neutral-400"></i>
+                            <label class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Tanda Tangan Digital</label>
+                        </div>
+                        
+                        <div class="flex flex-col md:flex-row gap-6 items-start">
+                            <div class="w-full md:w-1/3">
+                                <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-tight mb-2">TTD Saat Ini</p>
+                                <div class="h-32 bg-neutral-50 dark:bg-white/5 border border-base rounded-xl flex items-center justify-center overflow-hidden p-4">
+                                    @if(Auth::user()->guru->ttd_digital)
+                                        <img src="{{ asset('storage/' . Auth::user()->guru->ttd_digital) }}" class="max-w-full max-h-full object-contain grayscale dark:invert">
+                                    @else
+                                        <div class="text-center">
+                                            <i data-lucide="image-off" class="w-8 h-8 text-neutral-300 mx-auto mb-2"></i>
+                                            <p class="text-[9px] font-bold text-neutral-400 uppercase tracking-tighter">Belum Ada</p>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            
+                            <div class="w-full md:w-2/3 space-y-4">
+                                <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-tight">Unggah TTD Baru</p>
+                                <div class="relative group h-[128px]">
+                                    <input type="file" name="ttd_digital" id="ttd-input" 
+                                           class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+                                           accept="image/png"
+                                           onchange="previewTTD(event)">
+                                    <div class="absolute inset-0 border-2 border-dashed border-base group-hover:border-neutral-950 dark:group-hover:border-white rounded-2xl flex flex-col items-center justify-center transition-all bg-neutral-50/50 dark:bg-white/5">
+                                        <i data-lucide="upload-cloud" class="w-8 h-8 text-neutral-300 group-hover:text-neutral-950 dark:group-hover:text-white mb-2 transition-colors"></i>
+                                        <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest group-hover:text-neutral-950 dark:group-hover:text-white transition-colors">Klik atau seret file</p>
+                                        <p class="text-[9px] text-neutral-400 mt-1">Format PNG & Tanpa Background (Maks. 1MB)</p>
+                                    </div>
+                                </div>
+                                <div id="ttd-preview-container" class="hidden flex items-center gap-3 p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl">
+                                    <div class="w-12 h-12 rounded bg-white flex items-center justify-center p-1 border border-base overflow-hidden">
+                                        <img id="ttd-preview" src="#" class="max-w-full max-h-full object-contain grayscale">
+                                    </div>
+                                    <p class="text-[9px] font-bold text-blue-500 uppercase tracking-widest">Siap Diperbarui</p>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-[9px] text-rose-500 font-medium italic mt-2">* Wajib format PNG dan sudah di-remove backgroundnya untuk hasil terbaik di raport.</p>
+                    </div>
+                    @endif
+
                     <div class="pt-4">
                         <button type="submit" class="px-8 py-3.5 bg-neutral-950 dark:bg-white text-white dark:text-neutral-950 text-[10px] font-bold rounded-lg uppercase tracking-widest hover:opacity-90 transition-all active:scale-[0.98]">
                             Simpan Perubahan
@@ -225,6 +281,23 @@
         const input = event.target;
         const preview = document.getElementById('image-preview');
         const container = document.getElementById('image-preview-container');
+        
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                container.classList.remove('hidden');
+            }
+            
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function previewTTD(event) {
+        const input = event.target;
+        const preview = document.getElementById('ttd-preview');
+        const container = document.getElementById('ttd-preview-container');
         
         if (input.files && input.files[0]) {
             const reader = new FileReader();

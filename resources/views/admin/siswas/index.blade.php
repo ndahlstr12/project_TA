@@ -107,7 +107,6 @@
                     <tr class="text-[10px] font-black text-slate-300 uppercase tracking-[0.2em]">
                         <th class="px-8 py-6">Profil Siswa</th>
                         <th class="px-8 py-6">Tingkatan</th>
-                        <th class="px-8 py-6">Gender</th>
                         <th class="px-8 py-6 text-right">Aksi</th>
                     </tr>
                 </thead>
@@ -127,14 +126,6 @@
                         </td>
                         <td class="px-8 py-6">
                             <span class="px-3 py-1.5 bg-slate-100 dark:bg-white/5 rounded-xl text-[9px] font-black text-slate-500 uppercase tracking-tighter">{{ $siswa->kelas->nama_kelas ?? 'Belum Ada Kelas' }}</span>
-                        </td>
-                        <td class="px-8 py-6">
-                            <div class="flex items-center gap-2">
-                                <div class="w-1.5 h-1.5 rounded-full {{ $siswa->jenis_kelamin == 'L' ? 'bg-blue-400' : 'bg-rose-400' }}"></div>
-                                <span class="text-xs font-bold text-slate-600 dark:text-slate-400">
-                                    {{ $siswa->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan' }}
-                                </span>
-                            </div>
                         </td>
                         <td class="px-8 py-6 text-right">
                             <div class="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-all transform translate-x-2 group-hover:translate-x-0">

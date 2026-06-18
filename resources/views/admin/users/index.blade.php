@@ -52,23 +52,23 @@
     <!-- Advanced Filter Engine -->
     <div class="card-pro overflow-hidden">
         <!-- Control Bar -->
-        <div class="p-4 border-b border-base bg-neutral-50/30 dark:bg-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <form action="{{ route('admin.users.index') }}" method="GET" class="flex items-center bg-white dark:bg-surface-900 border border-base rounded-lg px-3 py-1.5 gap-2 focus-within:ring-2 focus-within:ring-accent/10 transition-all">
+        <div class="p-4 border-b border-base bg-neutral-50/30 dark:bg-white/5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <form action="{{ route('admin.users.index') }}" method="GET" class="flex items-center bg-white dark:bg-surface-900 border border-base rounded-lg px-3 py-1.5 gap-2 focus-within:ring-2 focus-within:ring-accent/10 transition-all w-full lg:w-auto">
                 @if(request('role'))
                     <input type="hidden" name="role" value="{{ request('role') }}">
                 @endif
                 <i data-lucide="search" class="w-3.5 h-3.5 text-neutral-400"></i>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari berdasarkan nama, ID, atau email..." class="bg-transparent border-none focus:ring-0 text-xs font-medium w-48 lg:w-80">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari user..." class="bg-transparent border-none focus:ring-0 text-xs font-medium flex-1 lg:w-80">
             </form>
             
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
                 @if(in_array($activeTab, ['siswa', 'orangtua']))
-                <form action="{{ route('admin.users.index') }}" method="GET" class="flex items-center gap-2">
+                <form action="{{ route('admin.users.index') }}" method="GET" class="flex items-center gap-2 flex-1 md:flex-none">
                     <input type="hidden" name="role" value="{{ $activeTab }}">
                     @if(request('search'))
                         <input type="hidden" name="search" value="{{ request('search') }}">
                     @endif
-                    <select name="kelas_id" onchange="this.form.submit()" class="px-4 py-1.5 text-[10px] font-bold border border-base rounded-lg bg-white dark:bg-white/5 outline-none focus:ring-2 focus:ring-accent/10 transition-all cursor-pointer">
+                    <select name="kelas_id" onchange="this.form.submit()" class="w-full md:w-auto px-4 py-1.5 text-[10px] font-bold border border-base rounded-lg bg-white dark:bg-white/5 outline-none focus:ring-2 focus:ring-accent/10 transition-all cursor-pointer">
                         <option value="">Semua Kelas</option>
                         @foreach($kelasList as $kelas)
                             <option value="{{ $kelas->id }}" {{ request('kelas_id') == $kelas->id ? 'selected' : '' }}>
@@ -79,20 +79,17 @@
                 </form>
                 @endif
 
-                <div class="flex bg-neutral-100 dark:bg-white/5 p-1 rounded-lg">
-                    <a href="{{ route('admin.users.index') }}" class="px-4 py-1.5 text-[10px] font-bold {{ $activeTab === 'all' ? 'bg-white dark:bg-white/10 shadow-sm rounded text-neutral-900 dark:text-white' : 'text-neutral-400' }} uppercase tracking-widest transition-all">Semua</a>
-                    <a href="{{ route('admin.users.index', ['role' => 'admin']) }}" class="px-4 py-1.5 text-[10px] font-bold {{ $activeTab === 'admin' ? 'bg-white dark:bg-white/10 shadow-sm rounded text-neutral-900 dark:text-white' : 'text-neutral-400' }} uppercase tracking-widest transition-all">Admin</a>
-                    <a href="{{ route('admin.users.index', ['role' => 'guru']) }}" class="px-4 py-1.5 text-[10px] font-bold {{ $activeTab === 'guru' ? 'bg-white dark:bg-white/10 shadow-sm rounded text-neutral-900 dark:text-white' : 'text-neutral-400' }} uppercase tracking-widest transition-all">Guru</a>
-                    <a href="{{ route('admin.users.index', ['role' => 'siswa']) }}" class="px-4 py-1.5 text-[10px] font-bold {{ $activeTab === 'siswa' ? 'bg-white dark:bg-white/10 shadow-sm rounded text-neutral-900 dark:text-white' : 'text-neutral-400' }} uppercase tracking-widest transition-all">Siswa</a>
+                <div class="flex bg-neutral-100 dark:bg-white/5 p-1 rounded-lg w-full md:w-auto overflow-x-auto custom-scrollbar">
+                    <a href="{{ route('admin.users.index') }}" class="flex-1 md:flex-none px-3 py-1.5 text-[10px] font-bold whitespace-nowrap {{ $activeTab === 'all' ? 'bg-white dark:bg-white/10 shadow-sm rounded text-neutral-900 dark:text-white' : 'text-neutral-400' }} uppercase tracking-widest transition-all text-center">Semua</a>
+                    <a href="{{ route('admin.users.index', ['role' => 'admin']) }}" class="flex-1 md:flex-none px-3 py-1.5 text-[10px] font-bold whitespace-nowrap {{ $activeTab === 'admin' ? 'bg-white dark:bg-white/10 shadow-sm rounded text-neutral-900 dark:text-white' : 'text-neutral-400' }} uppercase tracking-widest transition-all text-center">Admin</a>
+                    <a href="{{ route('admin.users.index', ['role' => 'guru']) }}" class="flex-1 md:flex-none px-3 py-1.5 text-[10px] font-bold whitespace-nowrap {{ $activeTab === 'guru' ? 'bg-white dark:bg-white/10 shadow-sm rounded text-neutral-900 dark:text-white' : 'text-neutral-400' }} uppercase tracking-widest transition-all text-center">Guru</a>
+                    <a href="{{ route('admin.users.index', ['role' => 'siswa']) }}" class="flex-1 md:flex-none px-3 py-1.5 text-[10px] font-bold whitespace-nowrap {{ $activeTab === 'siswa' ? 'bg-white dark:bg-white/10 shadow-sm rounded text-neutral-900 dark:text-white' : 'text-neutral-400' }} uppercase tracking-widest transition-all text-center">Siswa</a>
                 </div>
-                <button class="p-2 border border-base rounded-lg hover:bg-neutral-100 dark:hover:bg-white/5 transition-colors">
-                    <i data-lucide="filter" class="w-3.5 h-3.5 text-neutral-500"></i>
-                </button>
             </div>
         </div>
 
         <!-- High-Density Registry Table -->
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto hidden md:block">
             <table class="w-full text-left">
                 <thead>
                     <tr class="bg-neutral-50/30 dark:bg-white/5 border-b border-base text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
@@ -170,9 +167,73 @@
             </table>
         </div>
 
+        <!-- Mobile optimized card layout -->
+        <div class="md:hidden space-y-4 px-4 pb-4">
+            @foreach($users as $user)
+            <div class="card-pro p-5 space-y-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-12 h-12 rounded-xl bg-neutral-100 dark:bg-white/5 border border-base flex items-center justify-center overflow-hidden shrink-0">
+                            <img src="https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&background=f5f5f5&color=0a0a0a" class="w-full h-full grayscale">
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-sm font-black text-neutral-800 dark:text-neutral-200 truncate">{{ $user->name }}</p>
+                            <p class="text-[9px] text-neutral-500 font-medium uppercase tracking-widest mt-0.5">ID: {{ $user->username ?: 'PROT-'.(1000 + $user->id) }}</p>
+                        </div>
+                    </div>
+                    <span class="inline-flex items-center px-2 py-0.5 rounded text-[8px] font-black uppercase border
+                        @if($user->role == 'admin') bg-rose-500/5 text-rose-500 border-rose-500/10 
+                        @elseif($user->role == 'guru') bg-blue-500/5 text-blue-500 border-blue-500/10 
+                        @elseif($user->role == 'siswa') bg-emerald-500/5 text-emerald-500 border-emerald-500/10 
+                        @else bg-neutral-500/5 text-neutral-500 border-neutral-500/10 @endif">
+                        {{ $user->role }}
+                    </span>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 py-3 border-y border-base">
+                    <div class="space-y-1">
+                        <p class="text-[8px] font-black text-neutral-400 uppercase tracking-[0.2em]">Grup / Kelas</p>
+                        <p class="text-[10px] font-bold text-neutral-700 dark:text-neutral-300">
+                            @if(in_array($user->role, ['siswa', 'orangtua']) && $user->siswa)
+                                {{ $user->siswa->kelas->nama_kelas ?? 'Tanpa Kelas' }}
+                            @elseif(in_array($user->role, ['guru', 'walikelas']) && $user->guru)
+                                NIP: {{ $user->guru->nip }}
+                            @else
+                                -
+                            @endif
+                        </p>
+                    </div>
+                    <div class="space-y-1">
+                        <p class="text-[8px] font-black text-neutral-400 uppercase tracking-[0.2em]">Email</p>
+                        <p class="text-[10px] font-bold text-neutral-600 dark:text-neutral-400 truncate">{{ $user->email ?: '-' }}</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between pt-1">
+                    @if($user->last_login_at)
+                    <p class="text-[8px] text-neutral-400 font-medium italic">Login {{ $user->last_login_at->diffForHumans() }}</p>
+                    @else
+                    <p class="text-[8px] text-neutral-400 font-medium italic">Belum pernah login</p>
+                    @endif
+                    <div class="flex items-center gap-1">
+                        <a href="{{ route('admin.users.edit', $user->id) }}" class="p-2 text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
+                            <i data-lucide="edit-3" class="w-4 h-4"></i>
+                        </a>
+                        <form action="{{ route('admin.users.destroy', $user->id) }}" method="POST" onsubmit="return confirm('Arsipkan identitas?')" class="inline">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="p-2 text-rose-400 hover:text-rose-600 transition-colors">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            @endforeach
+        </div>
+
         <!-- Registry Footer -->
-        <div class="p-6 border-t border-base bg-neutral-50/30 dark:bg-white/5 flex items-center justify-between">
-            <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Pusat Identitas Global &bull; {{ $users->total() }} Entitas</p>
+        <div class="p-6 border-t border-base bg-neutral-50/30 dark:bg-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
+            <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest">Total: {{ $users->total() }} User</p>
             <div class="pro-pagination">
                 {{ $users->links() }}
             </div>

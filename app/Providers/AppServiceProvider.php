@@ -45,8 +45,20 @@ class AppServiceProvider extends ServiceProvider
                     ->latest()
                     ->take(5)
                     ->get();
+                
+                $formattedNotifications = $latestNotifications->map(function($n) {
+                    return [
+                        'id' => $n->id,
+                        'title' => $n->title,
+                        'message' => $n->message,
+                        'is_read' => (bool)$n->is_read,
+                        'time' => $n->created_at->diffForHumans()
+                    ];
+                });
+
                 $view->with('unreadNotificationsCount', $unreadNotificationsCount);
                 $view->with('latestNotifications', $latestNotifications);
+                $view->with('formattedNotifications', $formattedNotifications);
             }
         });
     }

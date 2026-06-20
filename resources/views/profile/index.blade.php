@@ -163,7 +163,7 @@
                         <div class="flex flex-col md:flex-row gap-6 items-start">
                             <div class="w-full md:w-1/3">
                                 <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-tight mb-2">TTD Saat Ini</p>
-                                <div class="h-32 bg-neutral-50 dark:bg-white/5 border border-base rounded-xl flex items-center justify-center overflow-hidden p-4">
+                                <div class="h-44 bg-neutral-50 dark:bg-white/5 border border-base rounded-xl flex items-center justify-center overflow-hidden p-4">
                                     @if(Auth::user()->guru->ttd_digital)
                                         <img src="{{ asset('storage/' . Auth::user()->guru->ttd_digital) }}" class="max-w-full max-h-full object-contain grayscale dark:invert">
                                     @else
@@ -176,23 +176,40 @@
                             </div>
                             
                             <div class="w-full md:w-2/3 space-y-4">
-                                <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-tight">Unggah TTD Baru</p>
-                                <div class="relative group h-[128px]">
-                                    <input type="file" name="ttd_digital" id="ttd-input" 
-                                           class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
-                                           accept="image/png"
-                                           onchange="previewTTD(event)">
-                                    <div class="absolute inset-0 border-2 border-dashed border-base group-hover:border-neutral-950 dark:group-hover:border-white rounded-2xl flex flex-col items-center justify-center transition-all bg-neutral-50/50 dark:bg-white/5">
-                                        <i data-lucide="upload-cloud" class="w-8 h-8 text-neutral-300 group-hover:text-neutral-950 dark:group-hover:text-white mb-2 transition-colors"></i>
-                                        <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest group-hover:text-neutral-950 dark:group-hover:text-white transition-colors">Klik atau seret file</p>
-                                        <p class="text-[9px] text-neutral-400 mt-1">Format PNG & Tanpa Background (Maks. 1MB)</p>
+                                <div class="flex gap-4 border-b border-base pb-2">
+                                    <button type="button" id="btn-tab-upload" onclick="switchTtdTab('upload')" class="text-[10px] font-black uppercase tracking-widest text-neutral-900 dark:text-white border-b-2 border-neutral-900 dark:border-white pb-1 focus:outline-none transition-all">Unggah File</button>
+                                    <button type="button" id="btn-tab-draw" onclick="switchTtdTab('draw')" class="text-[10px] font-bold uppercase tracking-widest text-neutral-400 pb-1 focus:outline-none transition-all">Gambar TTD</button>
+                                </div>
+
+                                <!-- Upload Area -->
+                                <div id="ttd-upload-area" class="space-y-4">
+                                    <div class="relative group h-[128px]">
+                                        <input type="file" name="ttd_digital" id="ttd-input" 
+                                               class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" 
+                                               accept="image/png"
+                                               onchange="previewTTD(event)">
+                                        <div class="absolute inset-0 border-2 border-dashed border-base group-hover:border-neutral-950 dark:group-hover:border-white rounded-2xl flex flex-col items-center justify-center transition-all bg-neutral-50/50 dark:bg-white/5">
+                                            <i data-lucide="upload-cloud" class="w-8 h-8 text-neutral-300 group-hover:text-neutral-950 dark:group-hover:text-white mb-2 transition-colors"></i>
+                                            <p class="text-[10px] font-bold text-neutral-400 uppercase tracking-widest group-hover:text-neutral-950 dark:group-hover:text-white transition-colors">Klik atau seret file</p>
+                                            <p class="text-[9px] text-neutral-400 mt-1">Format PNG & Tanpa Background (Maks. 1MB)</p>
+                                        </div>
+                                    </div>
+                                    <div id="ttd-preview-container" class="hidden flex items-center gap-3 p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl">
+                                        <div class="w-12 h-12 rounded bg-white flex items-center justify-center p-1 border border-base overflow-hidden">
+                                            <img id="ttd-preview" src="#" class="max-w-full max-h-full object-contain grayscale">
+                                        </div>
+                                        <p class="text-[9px] font-bold text-blue-500 uppercase tracking-widest">Siap Diperbarui</p>
                                     </div>
                                 </div>
-                                <div id="ttd-preview-container" class="hidden flex items-center gap-3 p-3 bg-blue-500/5 border border-blue-500/10 rounded-xl">
-                                    <div class="w-12 h-12 rounded bg-white flex items-center justify-center p-1 border border-base overflow-hidden">
-                                        <img id="ttd-preview" src="#" class="max-w-full max-h-full object-contain grayscale">
+
+                                <!-- Drawing Area -->
+                                <div id="ttd-draw-area" class="hidden space-y-3">
+                                    <div class="relative h-[128px] border-2 border-dashed border-base rounded-2xl overflow-hidden bg-white dark:bg-slate-900">
+                                        <canvas id="ttd-canvas" class="w-full h-full block touch-none cursor-crosshair"></canvas>
+                                        <button type="button" onclick="clearTtdCanvas()" class="absolute top-2 right-2 px-2.5 py-1 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white text-[9px] font-bold rounded-lg uppercase tracking-wider transition-all">Clear</button>
                                     </div>
-                                    <p class="text-[9px] font-bold text-blue-500 uppercase tracking-widest">Siap Diperbarui</p>
+                                    <p class="text-[8px] text-neutral-400 italic">* Silakan tanda tangan menggunakan mouse atau jari Anda pada area canvas di atas.</p>
+                                    <input type="hidden" name="ttd_canvas" id="ttd-canvas-data">
                                 </div>
                             </div>
                         </div>
@@ -308,6 +325,129 @@
             }
             
             reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    let currentTtdTab = 'upload';
+    
+    function switchTtdTab(tab) {
+        currentTtdTab = tab;
+        const uploadArea = document.getElementById('ttd-upload-area');
+        const drawArea = document.getElementById('ttd-draw-area');
+        const tabUpload = document.getElementById('btn-tab-upload');
+        const tabDraw = document.getElementById('btn-tab-draw');
+        
+        if (tab === 'upload') {
+            uploadArea.classList.remove('hidden');
+            drawArea.classList.add('hidden');
+            tabUpload.className = "text-[10px] font-black uppercase tracking-widest text-neutral-900 dark:text-white border-b-2 border-neutral-900 dark:border-white pb-1 focus:outline-none transition-all";
+            tabDraw.className = "text-[10px] font-bold uppercase tracking-widest text-neutral-400 pb-1 focus:outline-none transition-all";
+            document.getElementById('ttd-canvas-data').value = "";
+        } else {
+            uploadArea.classList.add('hidden');
+            drawArea.classList.remove('hidden');
+            tabUpload.className = "text-[10px] font-bold uppercase tracking-widest text-neutral-400 pb-1 focus:outline-none transition-all";
+            tabDraw.className = "text-[10px] font-black uppercase tracking-widest text-neutral-900 dark:text-white border-b-2 border-neutral-900 dark:border-white pb-1 focus:outline-none transition-all";
+            
+            // Initialize canvas if not initialized
+            setTimeout(initTtdCanvas, 50);
+        }
+    }
+
+    let canvas, ctx, drawing = false;
+
+    function initTtdCanvas() {
+        canvas = document.getElementById('ttd-canvas');
+        if (!canvas) return;
+        ctx = canvas.getContext('2d');
+        
+        // Handle High DPI displays
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width;
+        canvas.height = rect.height;
+        
+        ctx.strokeStyle = '#000000';
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        // Mouse Events
+        canvas.removeEventListener('mousedown', startDrawing);
+        canvas.removeEventListener('mousemove', draw);
+        canvas.removeEventListener('mouseup', stopDrawing);
+        canvas.removeEventListener('mouseleave', stopDrawing);
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseleave', stopDrawing);
+
+        // Touch Events
+        canvas.removeEventListener('touchstart', startDrawingTouch);
+        canvas.removeEventListener('touchmove', drawTouch);
+        canvas.removeEventListener('touchend', stopDrawing);
+
+        canvas.addEventListener('touchstart', startDrawingTouch);
+        canvas.addEventListener('touchmove', drawTouch);
+        canvas.addEventListener('touchend', stopDrawing);
+    }
+
+    function startDrawing(e) {
+        drawing = true;
+        ctx.beginPath();
+        ctx.moveTo(e.offsetX, e.offsetY);
+    }
+
+    function draw(e) {
+        if (!drawing) return;
+        ctx.lineTo(e.offsetX, e.offsetY);
+        ctx.stroke();
+        saveCanvasData();
+    }
+
+    function startDrawingTouch(e) {
+        if (e.touches.length === 1) {
+            drawing = true;
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            ctx.beginPath();
+            ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+            e.preventDefault();
+        }
+    }
+
+    function drawTouch(e) {
+        if (!drawing) return;
+        if (e.touches.length === 1) {
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
+            ctx.stroke();
+            saveCanvasData();
+            e.preventDefault();
+        }
+    }
+
+    function stopDrawing() {
+        drawing = false;
+    }
+
+    function clearTtdCanvas() {
+        if (!canvas) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        document.getElementById('ttd-canvas-data').value = "";
+    }
+
+    function saveCanvasData() {
+        if (!canvas) return;
+        // Check if canvas is blank
+        const blank = document.createElement('canvas');
+        blank.width = canvas.width;
+        blank.height = canvas.height;
+        if (canvas.toDataURL() === blank.toDataURL()) {
+            document.getElementById('ttd-canvas-data').value = "";
+        } else {
+            document.getElementById('ttd-canvas-data').value = canvas.toDataURL('image/png');
         }
     }
 </script>

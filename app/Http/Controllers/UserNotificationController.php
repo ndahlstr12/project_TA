@@ -50,4 +50,33 @@ class UserNotificationController extends Controller
 
         return back()->with('success', "$count semua notifikasi kehadiran berhasil dihapus.");
     }
+
+    /**
+     * Mengambil daftar notifikasi terbaru dan jumlah yang belum dibaca dalam format JSON.
+     */
+    public function getUnreadNotifications()
+    {
+        $unreadCount = Notification::where('user_id', Auth::id())
+            ->where('is_read', false)
+            ->count();
+            
+        $latest = Notification::where('user_id', Auth::id())
+            ->latest()
+            ->take(5)
+            ->get()
+            ->map(function($n) {
+                return [
+                    'id' => $n->id,
+                    'title' => $n->title,
+                    'message' => $n->message,
+                    'is_read' => $n->is_read,
+                    'time' => $n->created_at->diffForHumans()
+                ];
+            });
+
+        return response()->json([
+            'unreadCount' => $unreadCount,
+            'notifications' => $latest
+        ]);
+    }
 }

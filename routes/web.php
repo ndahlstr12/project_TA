@@ -40,6 +40,7 @@ Route::middleware('auth')->group(function() {
     Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
     // Notification Management
+    Route::get('/notifications/unread', [\App\Http\Controllers\UserNotificationController::class, 'getUnreadNotifications'])->name('notifications.unread');
     Route::post('/notifications/mark-all-read', [\App\Http\Controllers\UserNotificationController::class, 'markAllAsRead'])->name('notifications.markAllRead');
     Route::post('/notifications/clear-all', [\App\Http\Controllers\UserNotificationController::class, 'clearAll'])->name('notifications.clearAll');
     Route::post('/notifications/clear-attendance', [\App\Http\Controllers\UserNotificationController::class, 'clearAttendanceNotifications'])->name('notifications.clearAttendance');

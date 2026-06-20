@@ -605,45 +605,45 @@
             
             <div class="flex items-center gap-2 md:gap-4">
                 <!-- Notifications -->
-                <div class="relative" x-data="{ notifOpen: false }">
+                <div class="relative" x-data="notificationCenter()" x-init="initNotif()">
                     <button @click="notifOpen = !notifOpen" class="w-9 h-9 md:w-10 md:h-10 flex items-center justify-center rounded-xl bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 hover:text-blue-500 transition-colors relative">
                         <i class="ti ti-bell text-lg md:text-xl"></i>
-                        @if(isset($unreadNotificationsCount) && $unreadNotificationsCount > 0)
-                        <span class="absolute top-1.5 right-1.5 w-3.5 h-3.5 bg-rose-500 text-white text-[8px] font-black flex items-center justify-center rounded-full border-2 border-white dark:border-[#0f172a]">
-                            {{ $unreadNotificationsCount }}
-                        </span>
-                        @endif
+                        <template x-if="unreadCount > 0">
+                            <span class="absolute top-1.5 right-1.5 w-3.5 h-3.5 bg-rose-500 text-white text-[8px] font-black flex items-center justify-center rounded-full border-2 border-white dark:border-[#0f172a]" x-text="unreadCount">
+                            </span>
+                        </template>
                     </button>
 
                     <div x-show="notifOpen" @click.away="notifOpen = false" x-cloak x-transition class="absolute right-0 mt-3 w-72 md:w-80 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl shadow-2xl overflow-hidden z-50">
                         <div class="p-4 border-b border-slate-100 dark:border-white/5 flex items-center justify-between">
                             <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-white">Notifikasi</h4>
                             <div class="flex gap-2">
-                                @if(isset($unreadNotificationsCount) && $unreadNotificationsCount > 0)
-                                <form action="{{ route('notifications.markAllRead') }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="text-[8px] font-bold text-blue-500 uppercase hover:underline">Baca Semua</button>
-                                </form>
-                                @endif
+                                <template x-if="unreadCount > 0">
+                                    <form action="{{ route('notifications.markAllRead') }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="text-[8px] font-bold text-blue-500 uppercase hover:underline">Baca Semua</button>
+                                    </form>
+                                </template>
                             </div>
                         </div>
                         <div class="max-h-80 md:max-h-96 overflow-y-auto custom-scrollbar">
-                            @forelse($latestNotifications ?? [] as $notif)
-                            <div class="p-3 md:p-4 border-b border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
-                                <p class="text-[9px] md:text-[10px] font-bold text-slate-900 dark:text-white">{{ $notif->title }}</p>
-                                <p class="text-[9px] md:text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">{{ $notif->message }}</p>
-                                <p class="text-[7px] md:text-[8px] font-bold text-slate-400 uppercase mt-2 tracking-tighter">{{ $notif->created_at->diffForHumans() }}</p>
-                            </div>
-                            @empty
-                            <div class="p-8 text-center opacity-30">
-                                <i class="ti ti-bell-off text-2xl mb-2"></i>
-                                <p class="text-[9px] font-bold uppercase tracking-widest">Tidak ada notifikasi</p>
-                            </div>
-                            @endforelse
+                            <template x-for="notif in list" :key="notif.id">
+                                <div class="p-3 md:p-4 border-b border-slate-50 dark:border-white/5 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors">
+                                    <p class="text-[9px] md:text-[10px] font-bold text-slate-900 dark:text-white" x-text="notif.title"></p>
+                                    <p class="text-[9px] md:text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed" x-text="notif.message"></p>
+                                    <p class="text-[7px] md:text-[8px] font-bold text-slate-400 uppercase mt-2 tracking-tighter" x-text="notif.time"></p>
+                                </div>
+                            </template>
+                            <template x-if="list.length === 0">
+                                <div class="p-8 text-center opacity-30">
+                                    <i class="ti ti-bell-off text-2xl mb-2"></i>
+                                    <p class="text-[9px] font-bold uppercase tracking-widest">Tidak ada notifikasi</p>
+                                </div>
+                            </template>
                         </div>
-                        @if(isset($latestNotifications) && $latestNotifications->count() > 0)
-                        <a href="#" class="block p-3 text-center text-[9px] font-bold text-blue-500 uppercase tracking-widest bg-slate-50/50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 transition-all">Lihat Semua</a>
-                        @endif
+                        <template x-if="list.length > 0">
+                            <a href="#" class="block p-3 text-center text-[9px] font-bold text-blue-500 uppercase tracking-widest bg-slate-50/50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 transition-all">Lihat Semua</a>
+                        </template>
                     </div>
                 </div>
 
@@ -732,9 +732,67 @@
         </main>
     </div>
 
+    <!-- Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 space-y-3 z-[9999] w-80 max-w-[95vw]"></div>
+
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
         lucide.createIcons();
+
+        function showToast(title, message) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = 'p-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/5 rounded-2xl shadow-2xl flex items-start gap-3 animate-in slide-in-from-bottom-5 duration-300';
+            toast.innerHTML = `
+                <div class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
+                    <i class="ti ti-bell"></i>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <h5 class="text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-white leading-none">${title}</h5>
+                    <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">${message}</p>
+                </div>
+                <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-500 shrink-0">
+                    <i class="ti ti-x text-xs"></i>
+                </button>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                toast.classList.add('animate-out', 'fade-out', 'slide-out-to-bottom-5');
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        function notificationCenter() {
+            return {
+                notifOpen: false,
+                unreadCount: {{ $unreadNotificationsCount ?? 0 }},
+                list: @json($formattedNotifications ?? []),
+                initNotif() {
+                    // Poll unread notifications every 15 seconds
+                    setInterval(() => {
+                        fetch('{{ route('notifications.unread') }}')
+                            .then(response => response.json())
+                            .then(data => {
+                                // If unread count has increased, display new toasts
+                                if (data.unreadCount > this.unreadCount) {
+                                    const currentIds = this.list.map(n => n.id);
+                                    data.notifications.forEach(newNotif => {
+                                        if (!currentIds.includes(newNotif.id) && !newNotif.is_read) {
+                                            showToast(newNotif.title, newNotif.message);
+                                        }
+                                    });
+                                }
+                                this.unreadCount = data.unreadCount;
+                                this.list = data.notifications;
+                            })
+                            .catch(err => console.error('Notification Polling Error:', err));
+                    }, 15000);
+                }
+            }
+        }
     </script>
     @stack('scripts')
 </body>

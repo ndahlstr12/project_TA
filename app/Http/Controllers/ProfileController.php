@@ -58,9 +58,49 @@ class ProfileController extends Controller
         if (($user->role === 'guru' || $user->role === 'walikelas') && $user->guru) {
             $request->validate([
                 'ttd_digital' => ['nullable', 'image', 'mimes:png', 'max:1024'],
+                'ttd_canvas' => ['nullable', 'string'],
             ]);
 
-            if ($request->hasFile('ttd_digital')) {
+            if ($request->filled('ttd_canvas')) {
+                $base64Image = $request->input('ttd_canvas');
+                if (preg_match('/^data:image\/(\w+);base64,/', $base64Image, $type)) {
+                    $base64Image = substr($base64Image, strpos($base64Image, ',') + 1);
+                    $type = strtolower($type[1]);
+
+                    if ($type === 'png') {
+                        $imageData = base64_decode($base64Image);
+                        if ($imageData !== false) {
+                            $tempFile = tempnam(sys_get_temp_dir(), 'ttd_');
+                            $tempFilePath = $tempFile . '.png';
+                            file_put_contents($tempFilePath, $imageData);
+
+                            try {
+                                $isSignature = $this->aiService->validateSignature($tempFilePath);
+                                
+                                if (!$isSignature) {
+                                    return back()->with('error', 'Gagal memperbarui TTD: Sistem mendeteksi tanda tangan hasil gambar Anda kurang jelas atau bukan merupakan tanda tangan manual.');
+                                }
+
+                                if ($user->guru->ttd_digital) {
+                                    \Illuminate\Support\Facades\Storage::disk('public')->delete($user->guru->ttd_digital);
+                                }
+
+                                $filename = 'ttd-digital/' . uniqid() . '.png';
+                                \Illuminate\Support\Facades\Storage::disk('public')->put($filename, $imageData);
+                                $user->guru->update(['ttd_digital' => $filename]);
+
+                            } finally {
+                                if (file_exists($tempFilePath)) {
+                                    unlink($tempFilePath);
+                                }
+                                if (file_exists($tempFile)) {
+                                    unlink($tempFile);
+                                }
+                            }
+                        }
+                    }
+                }
+            } elseif ($request->hasFile('ttd_digital')) {
                 // Validasi AI: Apakah ini benar-benar tanda tangan?
                 $isSignature = $this->aiService->validateSignature($request->file('ttd_digital')->path());
                 

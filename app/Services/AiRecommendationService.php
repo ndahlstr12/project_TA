@@ -99,7 +99,7 @@ class AiRecommendationService
         try {
             // Persiapkan data nilai untuk AI
             $ringkasanNilai = $nilais->map(function($n) {
-                return "{$n->mapel->nama_mapel}: {$n->nilai_akhir}";
+                return (optional($n->mapel)->nama_mapel ?? 'Mata Pelajaran') . ": " . ($n->nilai_angka ?? 0);
             })->implode(', ');
 
             // Persiapkan data kehadiran
@@ -173,20 +173,80 @@ class AiRecommendationService
     {
         try {
             $siswa = $raport->siswa;
+            if (!$siswa) {
+                $raport->loadMissing('siswa');
+                $siswa = $raport->siswa;
+            }
+            
             $catatanWali = $raport->catatan_wali ?? 'Tidak ada catatan';
             $absensi = "Sakit: {$raport->sakit}, Izin: {$raport->izin}, Alpa: {$raport->alpa}";
 
-            $prompt = "Sebagai seorang konselor pendidikan ahli, berikan saran penanganan atau rekomendasi studi yang singkat, padat, dan motivatif untuk siswa berikut:
+            // Fetch overall grades per subject
+            $nilais = \App\Models\Nilai::with('mapel')
+                ->where('siswa_id', $raport->siswa_id)
+                ->where('semester', $raport->semester)
+                ->where('tahun_ajaran', $raport->tahun_ajaran)
+                ->get();
+
+            $ringkasanNilai = $nilais->map(function($n) {
+                return (optional($n->mapel)->nama_mapel ?? 'Mata Pelajaran') . ": " . ($n->nilai_angka ?? 0);
+            })->implode(', ');
+
+            // Fetch behavior logs (Jurnal Perilaku)
+            $semesterStart = date('Y') . '-01-01';
+            $semesterEnd = date('Y') . '-12-31';
+            $jurnals = \App\Models\JurnalPerilaku::where('siswa_id', $raport->siswa_id)
+                ->whereBetween('tanggal', [$semesterStart, $semesterEnd])
+                ->get();
+
+            $ringkasanPerilaku = $jurnals->map(function($j) {
+                return "[{$j->tipe}] {$j->catatan}";
+            })->implode('; ');
+
+            $prompt = "Sebagai seorang konselor pendidikan ahli, berikan saran motivasi serta rekomendasi studi/penanganan yang singkat, padat, dan mendukung perkembangan siswa berikut:
             
             Nama Siswa: {$siswa->nama}
+            Nilai Per Mata Pelajaran: " . ($ringkasanNilai ?: 'Tidak ada data nilai') . "
             Absensi: {$absensi}
+            Catatan Perilaku: " . ($ringkasanPerilaku ?: 'Tidak ada catatan perilaku khusus') . "
             Catatan Wali Kelas: {$catatanWali}
             
-            Berikan rekomendasi dalam maksimal 3 kalimat dalam Bahasa Indonesia yang formal dan mendukung perkembangan siswa tersebut.";
+            Tugas:
+            1. Buat 'saran_ai' (saran motivasi personal yang hangat dan inspiratif berdasarkan capaian akademik, kehadiran, dan perilakunya).
+            2. Buat 'rekomendasi_ai' (saran tindakan konkret bagi siswa/orang tua/guru untuk meningkatkan atau mempertahankan prestasinya).
+            
+            Kembalikan jawaban dalam format JSON valid dengan struktur berikut:
+            {
+                \"saran_ai\": \"(maksimal 2-3 kalimat hangat)\",
+                \"rekomendasi_ai\": \"(maksimal 2-3 kalimat tindakan nyata)\"
+            }
+            
+            Pastikan respon hanya berupa format JSON murni tanpa menyertakan blok kode markdown seperti ```json.";
 
             $hasilAi = $this->callGemini($prompt);
 
-            $raport->update(['saran_ai' => $hasilAi]);
+            // Clean the response from markdown wrapper if any
+            $cleanJson = trim($hasilAi);
+            if (strpos($cleanJson, '```') === 0) {
+                $cleanJson = preg_replace('/^```(?:json)?|```$/m', '', $cleanJson);
+                $cleanJson = trim($cleanJson);
+            }
+
+            $decoded = json_decode($cleanJson, true);
+
+            if ($decoded && isset($decoded['saran_ai']) && isset($decoded['rekomendasi_ai'])) {
+                $saranAi = $decoded['saran_ai'];
+                $rekomendasiAi = $decoded['rekomendasi_ai'];
+            } else {
+                // Fallback if parsing fails
+                $saranAi = $hasilAi;
+                $rekomendasiAi = "Disarankan terus dipantau kedisiplinan dan pembelajarannya baik di sekolah maupun di rumah.";
+            }
+
+            $raport->update([
+                'saran_ai' => $saranAi,
+                'rekomendasi_ai' => $rekomendasiAi
+            ]);
 
             // Simpan log (hanya jika raport_id tersedia karena batasan database saat ini)
             try {
@@ -203,7 +263,7 @@ class AiRecommendationService
             return [
                 'success' => true,
                 'message' => 'Rekomendasi AI berhasil dibuat.',
-                'data' => $hasilAi
+                'data' => $saranAi
             ];
 
         } catch (\Exception $e) {
@@ -216,12 +276,15 @@ class AiRecommendationService
                 str_contains($errorMessage, 'API Key Gemini belum diatur')) {
                 
                 $fallback = $this->getFallbackRecommendation($raport);
-                $raport->update(['saran_ai' => $fallback]);
+                $raport->update([
+                    'saran_ai' => $fallback['saran_ai'],
+                    'rekomendasi_ai' => $fallback['rekomendasi_ai']
+                ]);
                 
                 return [
                     'success' => true,
                     'message' => 'Rekomendasi berhasil dibuat (sistem cadangan offline).',
-                    'data' => $fallback
+                    'data' => $fallback['saran_ai']
                 ];
             }
             
@@ -319,7 +382,7 @@ class AiRecommendationService
     private function getFallbackWaliCatatan($siswa, $nilais, $kehadiran, $jurnals, $ekskuls)
     {
         $avgNilai = $nilais->avg(function($n) {
-            return $n->nilai_akhir ?? $n->nilai_angka ?? 0;
+            return $n->nilai_angka ?? 0;
         }) ?? 0;
         
         if ($avgNilai >= 80) {
@@ -338,11 +401,46 @@ class AiRecommendationService
     {
         $siswa = $raport->siswa;
         $totalAlpa = $raport->alpa ?? 0;
+
+        $nilais = \App\Models\Nilai::where('siswa_id', $raport->siswa_id)
+            ->where('semester', $raport->semester)
+            ->where('tahun_ajaran', $raport->tahun_ajaran)
+            ->get();
+        $avgNilai = $nilais->avg('nilai_angka') ?? 0;
+
+        $semesterStart = date('Y') . '-01-01';
+        $semesterEnd = date('Y') . '-12-31';
+        $jurnals = \App\Models\JurnalPerilaku::where('siswa_id', $raport->siswa_id)
+            ->whereBetween('tanggal', [$semesterStart, $semesterEnd])
+            ->get();
         
-        if ($totalAlpa > 3) {
-            return "Disarankan bagi orang tua untuk memantau kedisiplinan kehadiran {$siswa->nama} secara lebih ketat di rumah serta berkoordinasi secara aktif dengan pihak sekolah guna meminimalisir ketidakhadiran tanpa keterangan.";
+        $hasNegatifPerilaku = $jurnals->contains(function($j) {
+            return strtolower($j->tipe) === 'negatif';
+        });
+
+        // 1. Fallback Saran Motivasi (saran_ai)
+        if ($avgNilai >= 80) {
+            $saran = "Pertahankan motivasi belajar, sikap disiplin, serta partisipasi aktif {$siswa->nama} baik di dalam kelas maupun kegiatan sekolah untuk mendukung rencana studi lanjutannya.";
+        } elseif ($avgNilai >= 70) {
+            $saran = "Tingkatkan lagi ketekunan dan semangat belajar {$siswa->nama} agar pencapaian akademiknya dapat terus berkembang ke arah yang lebih baik.";
         } else {
-            return "Pertahankan motivasi belajar, sikap disiplin, serta partisipasi aktif {$siswa->nama} baik di dalam kelas maupun kegiatan sekolah untuk mendukung rencana studi lanjutannya.";
+            $saran = "{$siswa->nama} membutuhkan dorongan motivasi ekstra serta bimbingan belajar yang lebih intensif untuk membantu mengatasi kendala belajarnya.";
         }
+
+        // 2. Fallback Rekomendasi Tindakan (rekomendasi_ai)
+        if ($totalAlpa > 3) {
+            $rekomendasi = "Disarankan bagi orang tua untuk memantau kedisiplinan kehadiran {$siswa->nama} secara lebih ketat serta berkoordinasi secara aktif dengan pihak sekolah.";
+        } elseif ($avgNilai < 70) {
+            $rekomendasi = "Diharapkan orang tua memberikan bimbingan akademis tambahan di rumah secara rutin untuk mendongkrak capaian nilai mata pelajaran.";
+        } elseif ($hasNegatifPerilaku) {
+            $rekomendasi = "Perlu pembinaan karakter secara persuasif dan berkelanjutan di rumah untuk memperbaiki perilaku siswa agar sejalan dengan prestasinya.";
+        } else {
+            $rekomendasi = "Disarankan agar orang tua dan guru terus mendukung minat serta bakat positif yang dimiliki siswa guna pengembangan dirinya.";
+        }
+
+        return [
+            'saran_ai' => $saran,
+            'rekomendasi_ai' => $rekomendasi
+        ];
     }
 }

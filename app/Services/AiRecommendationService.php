@@ -145,6 +145,20 @@ class AiRecommendationService
 
         } catch (\Exception $e) {
             Log::error('AI Wali Catatan Error: ' . $e->getMessage());
+            
+            $errorMessage = $e->getMessage();
+            if (str_contains($errorMessage, 'Could not resolve') || 
+                str_contains($errorMessage, 'cURL error') || 
+                str_contains($errorMessage, 'timed out') || 
+                str_contains($errorMessage, 'API Key Gemini belum diatur')) {
+                
+                $fallback = $this->getFallbackWaliCatatan($siswa, $nilais, $kehadiran, $jurnals, $ekskuls);
+                return [
+                    'success' => true,
+                    'data' => $fallback
+                ];
+            }
+            
             return [
                 'success' => false,
                 'message' => 'Gagal generate catatan: ' . $e->getMessage()
@@ -194,6 +208,23 @@ class AiRecommendationService
 
         } catch (\Exception $e) {
             Log::error('AI Error: ' . $e->getMessage());
+            
+            $errorMessage = $e->getMessage();
+            if (str_contains($errorMessage, 'Could not resolve') || 
+                str_contains($errorMessage, 'cURL error') || 
+                str_contains($errorMessage, 'timed out') || 
+                str_contains($errorMessage, 'API Key Gemini belum diatur')) {
+                
+                $fallback = $this->getFallbackRecommendation($raport);
+                $raport->update(['saran_ai' => $fallback]);
+                
+                return [
+                    'success' => true,
+                    'message' => 'Rekomendasi berhasil dibuat (sistem cadangan offline).',
+                    'data' => $fallback
+                ];
+            }
+            
             return [
                 'success' => false,
                 'message' => 'Gagal mengambil saran AI: ' . $e->getMessage()
@@ -237,10 +268,81 @@ class AiRecommendationService
 
         } catch (\Exception $e) {
             Log::error('AI Behavior Error: ' . $e->getMessage());
+            
+            $errorMessage = $e->getMessage();
+            if (str_contains($errorMessage, 'Could not resolve') || 
+                str_contains($errorMessage, 'cURL error') || 
+                str_contains($errorMessage, 'timed out') || 
+                str_contains($errorMessage, 'API Key Gemini belum diatur')) {
+                
+                $fallback = $this->getFallbackBehaviorRecommendation($namaSiswa, $catatanPerilaku);
+                return [
+                    'success' => true,
+                    'message' => 'Analisis perilaku berhasil dibuat (sistem cadangan offline).',
+                    'data' => $fallback
+                ];
+            }
+            
             return [
                 'success' => false,
                 'message' => 'Gagal mengambil analisis AI: ' . $e->getMessage()
             ];
+        }
+    }
+
+    /**
+     * Fallback method untuk menghasilkan saran perilaku offline.
+     */
+    private function getFallbackBehaviorRecommendation($namaSiswa, $catatanPerilaku)
+    {
+        $catatanLower = strtolower($catatanPerilaku);
+        $isNegatif = false;
+        $negativeKeywords = ['membolos', 'bolos', 'terlambat', 'telat', 'bertengkar', 'berantem', 'ribut', 'tidur', 'handphone', 'hp', 'bermain', 'main', 'mencuri', 'merokok', 'rokok', 'gadget', 'menyontek', 'contek', 'malas', 'alpa', 'absen', 'marah', 'kasar'];
+        
+        foreach ($negativeKeywords as $keyword) {
+            if (str_contains($catatanLower, $keyword)) {
+                $isNegatif = true;
+                break;
+            }
+        }
+
+        if ($isNegatif) {
+            return "Perlu dilakukan pendekatan personal secara persuasif dengan {$namaSiswa} untuk membimbing perilakunya. Disarankan kepada orang tua untuk meningkatkan pengawasan di rumah serta berkomunikasi aktif dengan wali kelas mengenai perkembangannya.";
+        } else {
+            return "Apresiasi yang tinggi patut diberikan kepada {$namaSiswa} atas perilaku positif yang ditunjukkannya. Disarankan kepada orang tua dan guru untuk terus memberikan motivasi dan dukungan agar prestasi dan karakter baiknya tetap terjaga.";
+        }
+    }
+
+    /**
+     * Fallback method untuk menghasilkan catatan wali kelas offline.
+     */
+    private function getFallbackWaliCatatan($siswa, $nilais, $kehadiran, $jurnals, $ekskuls)
+    {
+        $avgNilai = $nilais->avg(function($n) {
+            return $n->nilai_akhir ?? $n->nilai_angka ?? 0;
+        }) ?? 0;
+        
+        if ($avgNilai >= 80) {
+            return "Selamat kepada {$siswa->nama} atas pencapaian akademis yang sangat memuaskan di semester ini. Pertahankan konsistensi belajar, kedisiplinan, serta keaktifan Anda untuk meraih prestasi yang lebih tinggi di masa mendatang.";
+        } elseif ($avgNilai >= 70) {
+            return "Pencapaian akademis {$siswa->nama} di semester ini tergolong cukup baik. Tingkatkan lagi fokus belajar dan keaktifan di dalam kelas agar nilainya dapat lebih maksimal di semester berikutnya.";
+        } else {
+            return "{$siswa->nama} perlu meningkatkan fokus, waktu belajar, dan kehadiran di semester depan. Diharapkan kerja sama yang lebih intensif antara orang tua di rumah dan guru di sekolah untuk mendukung belajarnya.";
+        }
+    }
+
+    /**
+     * Fallback method untuk menghasilkan saran rekomendasi raport offline.
+     */
+    private function getFallbackRecommendation($raport)
+    {
+        $siswa = $raport->siswa;
+        $totalAlpa = $raport->alpa ?? 0;
+        
+        if ($totalAlpa > 3) {
+            return "Disarankan bagi orang tua untuk memantau kedisiplinan kehadiran {$siswa->nama} secara lebih ketat di rumah serta berkoordinasi secara aktif dengan pihak sekolah guna meminimalisir ketidakhadiran tanpa keterangan.";
+        } else {
+            return "Pertahankan motivasi belajar, sikap disiplin, serta partisipasi aktif {$siswa->nama} baik di dalam kelas maupun kegiatan sekolah untuk mendukung rencana studi lanjutannya.";
         }
     }
 }

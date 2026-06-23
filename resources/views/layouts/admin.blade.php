@@ -411,14 +411,21 @@
         .custom-scrollbar::-webkit-scrollbar { width: 3px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { @apply bg-slate-200 dark:bg-white/10 rounded-full; }
 
-        @media (max-width: 768px) {
+        @media (max-width: 1024px) {
             .sidebar-wrap {
-                position: fixed;
-                left: -260px;
+                position: fixed !important;
+                top: 0;
+                left: -280px;
+                height: 100vh;
+                z-index: 100;
                 transition: left var(--transition);
             }
             .sidebar-wrap.mobile-open {
                 left: 0;
+            }
+            .main-wrapper {
+                width: 100% !important;
+                min-width: 0 !important;
             }
         }
 
@@ -432,7 +439,7 @@
 <body>
 
     <!-- Overlay untuk mobile -->
-    <div class="fixed inset-0 bg-black/50 z-[90] hidden" :class="{ 'block': mobileSidebarOpen }" @click="mobileSidebarOpen = false"></div>
+    <div class="fixed inset-0 bg-black/60 z-[99] hidden" :class="{ '!block': mobileSidebarOpen }" @click="mobileSidebarOpen = false"></div>
 
     <div class="sidebar-wrap flex-shrink-0 relative" :class="{ 'mobile-open': mobileSidebarOpen }">
         <aside class="sidebar" :class="{ 'collapsed': sidebarCollapsed }">
@@ -542,7 +549,8 @@
                         </div>
                     @else
                         <a href="{{ Route::has($item['route']) ? route($item['route']) : '#' }}" 
-                           class="nav-item {{ request()->routeIs($item['route']) ? 'active' : '' }}">
+                           class="nav-item {{ request()->routeIs($item['route']) ? 'active' : '' }}"
+                           @click="mobileSidebarOpen = false">
                             <span class="nav-icon"><i class="ti {{ $item['icon'] }}"></i></span>
                             <span class="nav-label-text">{{ $item['label'] }}</span>
                             <span class="tooltip">{{ $item['label'] }}</span>
@@ -594,7 +602,7 @@
         <!-- Nav Top area -->
         <header class="h-[72px] px-4 md:px-8 flex items-center justify-between shrink-0 bg-white/80 dark:bg-[#0f172a]/50 backdrop-blur-md border-b border-slate-200 dark:border-white/5 transition-colors duration-300 relative z-40">
             <div class="flex items-center gap-3">
-                <button class="lg:hidden w-10 h-10 flex items-center justify-center bg-slate-800 border border-white/5 rounded-xl text-white shadow-lg active:scale-95 transition-all" @click="mobileSidebarOpen = !mobileSidebarOpen">
+                <button class="xl:hidden w-10 h-10 flex items-center justify-center bg-slate-800 border border-white/5 rounded-xl text-white shadow-lg active:scale-95 transition-all" @click="mobileSidebarOpen = !mobileSidebarOpen">
                     <i class="ti ti-menu-2 text-xl"></i>
                 </button>
                 <div class="min-w-0">

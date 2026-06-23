@@ -6,27 +6,30 @@
 @section('content')
 <div class="space-y-8">
     
-    <div class="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
-        <div class="flex items-center gap-5">
-            <div class="w-16 h-16 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-500">
-                <i class="ti ti-award text-3xl"></i>
+    <div class="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl p-5 md:p-8 border border-slate-200 dark:border-white/5 space-y-4">
+        <div class="flex items-center gap-4">
+            <div class="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-500 shrink-0">
+                <i class="ti ti-award text-2xl md:text-3xl"></i>
             </div>
-            <div>
-                <h3 class="text-xl font-extrabold text-slate-900 dark:text-white">Ranking SPK Kelas {{ $kelas->nama_kelas ?? '' }}</h3>
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Sistem Pendukung Keputusan Berbasis Kriteria</p>
+            <div class="min-w-0">
+                <h3 class="text-base md:text-xl font-extrabold text-slate-900 dark:text-white leading-tight">Ranking SPK Kelas {{ $kelas->nama_kelas ?? '' }}</h3>
+                <p class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Sistem Pendukung Keputusan Berbasis Kriteria</p>
             </div>
         </div>
-        <div class="flex items-center gap-4">
-            <form action="{{ route('walikelas.ranking.generate') }}" method="POST">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            <form action="{{ route('walikelas.ranking.generate') }}" method="POST" class="w-full sm:w-auto">
                 @csrf
-                <button type="submit" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-500/25 flex items-center gap-2">
+                <button type="submit" class="w-full sm:w-auto px-5 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2">
                     <i class="ti ti-refresh"></i>
                     Generate Ranking
                 </button>
             </form>
-            <div class="px-6 py-3 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-100 dark:border-white/5">
-                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center md:text-left">Tahun Ajaran</p>
-                <p class="text-sm font-black text-slate-900 dark:text-white">2026/2027 - GENAP</p>
+            <div class="flex items-center gap-2 px-4 py-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-100 dark:border-white/5">
+                <i class="ti ti-calendar text-slate-400 text-base shrink-0"></i>
+                <div>
+                    <p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Tahun Ajaran</p>
+                    <p class="text-xs font-black text-slate-900 dark:text-white">{{ $tahunAjaran ?? '2025/2026' }}</p>
+                </div>
             </div>
         </div>
     </div>
@@ -109,7 +112,7 @@
     </div>
 
     <!-- Transparansi Algoritma SAW -->
-    @if(!empty($matrix))
+    @if(!empty($matriksX))
     <div x-data="{ showTransparency: false }" class="space-y-6">
         <button @click="showTransparency = !showTransparency" class="flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 hover:text-indigo-600 transition-colors">
             <i :class="showTransparency ? 'ti ti-chevron-down' : 'ti ti-chevron-right'"></i>
@@ -135,7 +138,7 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-50 dark:divide-white/5">
-                                @foreach($matrix as $siswaId => $data)
+                                @foreach($matriksX as $siswaId => $data)
                                 <tr>
                                     <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-300">{{ $data['nama'] }}</td>
                                     @foreach($kriterias as $k)
@@ -167,9 +170,9 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-50 dark:divide-white/5">
-                                @foreach($normalized as $siswaId => $data)
+                                @foreach($matriksR as $siswaId => $data)
                                 <tr>
-                                    <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-300">{{ $matrix[$siswaId]['nama'] }}</td>
+                                    <td class="px-6 py-4 font-bold text-slate-700 dark:text-slate-300">{{ $matriksX[$siswaId]['nama'] }}</td>
                                     @foreach($kriterias as $k)
                                     <td class="px-6 py-4 text-center text-indigo-600 font-bold">{{ number_format($data[$k->kode], 4) }}</td>
                                     @endforeach

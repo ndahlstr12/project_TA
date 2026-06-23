@@ -20,11 +20,12 @@
       min-height: 100vh;
       display: flex;
       background: var(--gray-soft);
-      overflow: hidden;
+      overflow-x: hidden;
     }
 
     /* ── LEFT PANEL ── */
     .left-panel {
+      display: none; /* Sembunyikan di HP secara default */
       width: 42%;
       min-height: 100vh;
       background: linear-gradient(150deg, var(--navy-deep) 0%, var(--navy) 60%, #2a4080 100%);
@@ -381,6 +382,33 @@
 
     /* input error highlight */
     input.input-error { border-color: #dc2626 !important; box-shadow: 0 0 0 3px rgba(220,38,38,.1) !important; }
+
+    /* ── RESPONSIVE ── */
+    /* Tablet ke atas: tampilkan panel kiri */
+    @media (min-width: 768px) {
+      .left-panel { display: flex; }
+      body { overflow: hidden; }
+    }
+
+    /* HP: form card full screen, padding lebih kecil */
+    @media (max-width: 767px) {
+      .right-panel {
+        width: 100%;
+        min-height: 100vh;
+        padding: 1.5rem 1rem;
+        align-items: flex-start;
+        padding-top: 2.5rem;
+      }
+      .form-card {
+        padding: 2rem 1.5rem;
+        border-radius: 20px;
+        max-width: 100%;
+      }
+      .form-title { font-size: 1.4rem; }
+      .otp-box { width: 42px; height: 50px; font-size: 1.2rem; }
+      .modal-body { padding: 1.5rem 1.5rem 2rem; }
+      .modal-header { padding: 1.8rem 1.5rem 1.4rem; }
+    }
   </style>
 </head>
 <body>

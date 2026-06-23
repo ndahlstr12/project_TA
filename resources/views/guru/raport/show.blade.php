@@ -39,7 +39,8 @@
                 <div class="p-4 border-b border-base bg-neutral-50/30 dark:bg-white/5">
                     <h3 class="text-[10px] font-black uppercase tracking-widest text-neutral-400">Nilai Akademik</h3>
                 </div>
-                <table class="w-full text-left">
+                <div class="overflow-x-auto">
+                <table class="w-full text-left min-w-[400px]">
                     <thead>
                         <tr class="bg-neutral-50/30 dark:bg-white/5 border-b border-base text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
                             <th class="px-6 py-3">Mata Pelajaran</th>
@@ -65,6 +66,7 @@
                         @endforelse
                     </tbody>
                 </table>
+                </div>
             </div>
 
             <div class="card-pro p-6 space-y-4">

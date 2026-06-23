@@ -31,7 +31,7 @@
     </div>
 
     <!-- Ringkasan Statistik -->
-    <div class="grid grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         <!-- Total Siswa -->
         <div class="card-pro p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-4 bg-white dark:bg-slate-900">
             <div class="w-10 h-10 md:w-14 md:h-14 rounded-xl md:rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500">

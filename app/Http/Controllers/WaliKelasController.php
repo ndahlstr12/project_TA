@@ -15,6 +15,20 @@ use App\Models\JurnalPerilaku;
 use App\Models\Setting;
 use App\Models\Raport;
 
+/**
+ * WaliKelasController
+ *
+ * Mengelola fitur Wali Kelas, termasuk:
+ * - Dashboard monitoring kelas
+ * - Sistem Pendukung Keputusan (SPK) menggunakan metode SAW
+ *   (Simple Additive Weighting) untuk perankingan siswa
+ *
+ * Metode SAW dipilih karena sederhana, transparan, dan mudah
+ * dijelaskan kepada stakeholder non-teknis (guru, orang tua).
+ *
+ * Referensi: Fishburn, P.C. (1967). Additive Utilities with
+ * Incomplete Product Set: Applications to Priorities and Assignments.
+ */
 class WaliKelasController extends Controller
 {
     public function index()
@@ -35,9 +49,9 @@ class WaliKelasController extends Controller
         $siswas = [];
         $monitoringMapel = [];
         $stats = [
-            'total_siswa' => 0,
-            'hadir_today' => 0,
-            'raport_selesai' => 0,
+            'total_siswa'     => 0,
+            'hadir_today'     => 0,
+            'raport_selesai'  => 0,
             'perlu_perhatian' => []
         ];
 
@@ -52,23 +66,24 @@ class WaliKelasController extends Controller
                 ->where('status', 'Hadir')
                 ->count();
 
-            // Progres Raport (Wali Kelas)
+            // Progres Raport
             $stats['raport_selesai'] = Raport::whereIn('siswa_id', $siswas->pluck('id'))
                 ->where('semester', $semester)
                 ->where('tahun_ajaran', $tahunAjaran)
                 ->where('status', 'selesai')
                 ->count();
 
-            // Siswa perlu perhatian (Alpa > 3 dalam semester ini)
+            // Siswa perlu perhatian: Alpa > 3 dalam semester ini
+            // Digunakan sebagai dasar intervensi awal sebelum SPK dijalankan
             $stats['perlu_perhatian'] = Siswa::where('kelas_id', $kelas->id)
-                ->whereHas('raports', function($q) use ($semester, $tahunAjaran) {
+                ->whereHas('raports', function ($q) use ($semester, $tahunAjaran) {
                     $q->where('semester', $semester)
                       ->where('tahun_ajaran', $tahunAjaran)
                       ->where('alpa', '>', 3);
                 })
                 ->get();
 
-            // 2. Monitoring Progres Guru Mapel Lain
+            // 2. Monitoring Progres Guru Mapel
             $monitoringMapel = Jadwal::with(['mapel', 'guru'])
                 ->where('kelas_id', $kelas->id)
                 ->get()
@@ -76,7 +91,7 @@ class WaliKelasController extends Controller
                 ->map(function ($items) use ($kelas, $semester, $tahunAjaran) {
                     $first = $items->first();
                     $totalSiswa = $kelas->siswas->count();
-                    
+
                     $sudahDinilai = \App\Models\Nilai::where('mapel_id', $first->mapel_id)
                         ->whereIn('siswa_id', $kelas->siswas->pluck('id'))
                         ->where('semester', $semester)
@@ -85,30 +100,55 @@ class WaliKelasController extends Controller
                         ->count();
 
                     return [
-                        'mapel' => $first->mapel->nama_mapel ?? 'N/A',
-                        'guru' => $first->guru->nama ?? 'N/A',
-                        'progres' => $totalSiswa > 0 ? round(($sudahDinilai / $totalSiswa) * 100) : 0,
+                        'mapel'     => $first->mapel->nama_mapel ?? 'N/A',
+                        'guru'      => $first->guru->nama ?? 'N/A',
+                        'progres'   => $totalSiswa > 0 ? round(($sudahDinilai / $totalSiswa) * 100) : 0,
                         'avg_nilai' => \App\Models\Nilai::where('mapel_id', $first->mapel_id)
                             ->whereIn('siswa_id', $kelas->siswas->pluck('id'))
                             ->where('semester', $semester)
                             ->where('tahun_ajaran', $tahunAjaran)
                             ->avg('nilai_angka') ?? 0,
                         'count' => $sudahDinilai,
-                        'total' => $totalSiswa
+                        'total' => $totalSiswa,
                     ];
                 });
         }
 
-        // 3. Ambil jadwal mengajar pribadi
+        // 3. Ambil jadwal mengajar pribadi wali kelas
         $jadwals = Jadwal::with(['mapel', 'kelas'])
             ->where('guru_id', $guru->id)
             ->orderByRaw("FIELD(hari, 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu')")
             ->orderBy('jam_mulai')
             ->get();
 
-        return view('walikelas.dashboard', compact('kelas', 'siswas', 'jadwals', 'monitoringMapel', 'stats', 'semester', 'tahunAjaran'));
+        return view('walikelas.dashboard', compact(
+            'kelas', 'siswas', 'jadwals', 'monitoringMapel', 'stats', 'semester', 'tahunAjaran'
+        ));
     }
 
+    // =========================================================================
+    // MODUL SPK — METODE SAW (Simple Additive Weighting)
+    //
+    // Alur Metode SAW:
+    //   1. Tentukan kriteria (Cj) dan bobot (Wj) — dikelola Admin
+    //   2. Bangun Matriks Keputusan (X): nilai tiap siswa per kriteria
+    //   3. Normalisasi Matriks (R):
+    //        - Kriteria benefit : Rij = Xij / max(Xj)
+    //        - Kriteria cost    : Rij = min(Xj) / Xij
+    //   4. Hitung Skor Preferensi (V):
+    //        Vi = Σ (Wj × Rij)
+    //   5. Ranking berdasarkan Vi tertinggi → prioritas penanganan masalah
+    //
+    // Kriteria yang digunakan:
+    //   C1 — Nilai Akademik (benefit)  : rata-rata nilai mata pelajaran
+    //   C2 — Kehadiran     (benefit)   : persentase kehadiran siswa
+    //   C3 — Poin Perilaku (benefit)   : akumulasi poin jurnal perilaku
+    // =========================================================================
+
+    /**
+     * Menampilkan halaman ranking SPK beserta transparansi perhitungan
+     * langkah demi langkah (matriks keputusan + matriks normalisasi).
+     */
     public function ranking()
     {
         $user = Auth::user();
@@ -118,72 +158,89 @@ class WaliKelasController extends Controller
             return redirect()->back()->with('error', 'Data guru tidak ditemukan.');
         }
 
-        $kelas = Kelas::where('wali_id', $guru->id)->first();
-        $rankings = [];
-        $matrix = [];
-        $normalized = [];
-        $kriterias = Kriteria::all();
+        $kelas    = Kelas::where('wali_id', $guru->id)->first();
+        $rankings   = [];
+        $matriksX   = []; // Matriks Keputusan  (X)  — nilai mentah tiap siswa
+        $matriksR   = []; // Matriks Normalisasi (R)  — hasil normalisasi SAW
+        $kriterias  = Kriteria::orderBy('kode')->get();
 
         if ($kelas) {
+            // Ambil ranking tersimpan dari database
             $rankings = SpkRanking::with('siswa')
                 ->whereIn('siswa_id', $kelas->siswas->pluck('id'))
                 ->orderBy('ranking', 'asc')
                 ->get();
 
-            // RE-CALCULATE for Transparency (Step-by-step)
-            $siswas = Siswa::where('kelas_id', $kelas->id)->get();
+            // Hitung ulang matriks untuk ditampilkan secara transparan di view
+            $siswas      = Siswa::where('kelas_id', $kelas->id)->get();
             $tahunAjaran = Setting::get('tahun_ajaran', '2025/2026');
-            $semester = Setting::get('semester', 'Ganjil');
+            $semester    = Setting::get('semester', 'Ganjil');
 
+            // --- Langkah 2: Bangun Matriks Keputusan (X) ---
             foreach ($siswas as $siswa) {
-                // C1: Nilai Akademik
+                // C1: Rata-rata nilai akademik semester ini
                 $avgNilai = Nilai::where('siswa_id', $siswa->id)
                     ->where('tahun_ajaran', $tahunAjaran)
                     ->where('semester', $semester)
                     ->avg('nilai_angka') ?? 0;
 
-                // C2: Kehadiran
-                $totalHari = Kehadiran::where('siswa_id', $siswa->id)->count();
-                $hadir = Kehadiran::where('siswa_id', $siswa->id)->where('status', 'Hadir')->count();
-                $persenHadir = $totalHari > 0 ? ($hadir / $totalHari) * 100 : 0;
+                // C2: Persentase kehadiran (hadir / total hari × 100)
+                $totalHari    = Kehadiran::where('siswa_id', $siswa->id)->count();
+                $jumlahHadir  = Kehadiran::where('siswa_id', $siswa->id)->where('status', 'Hadir')->count();
+                $persenHadir  = $totalHari > 0 ? ($jumlahHadir / $totalHari) * 100 : 0;
 
-                // C3: Perilaku
+                // C3: Akumulasi poin perilaku dari jurnal (positif menambah, negatif mengurangi)
                 $poinPerilaku = JurnalPerilaku::where('siswa_id', $siswa->id)->sum('poin');
 
-                $matrix[$siswa->id] = [
+                $matriksX[$siswa->id] = [
                     'nama' => $siswa->nama,
-                    'C1' => (float)$avgNilai,
-                    'C2' => (float)$persenHadir,
-                    'C3' => (float)$poinPerilaku,
+                    'C1'   => (float) $avgNilai,
+                    'C2'   => (float) $persenHadir,
+                    'C3'   => (float) $poinPerilaku,
                 ];
             }
 
-            // Normalisasi
-            foreach ($kriterias as $k) {
-                $values = array_column($matrix, $k->kode);
-                if (empty($values)) continue;
-                
-                $max = max($values);
-                $min = min($values);
+            // --- Langkah 3: Normalisasi Matriks (R) ---
+            // Benefit: Rij = Xij / max(Xj)
+            // Cost   : Rij = min(Xj) / Xij
+            foreach ($kriterias as $kriteria) {
+                $nilaiKolom = array_column($matriksX, $kriteria->kode);
+                if (empty($nilaiKolom)) continue;
+
+                $maks = max($nilaiKolom);
+                $min  = min($nilaiKolom);
 
                 foreach ($siswas as $siswa) {
-                    $val = $matrix[$siswa->id][$k->kode];
-                    if ($k->jenis == 'benefit') {
-                        $normalized[$siswa->id][$k->kode] = $max > 0 ? ($val / $max) : 0;
+                    $xij = $matriksX[$siswa->id][$kriteria->kode];
+
+                    if ($kriteria->jenis === 'benefit') {
+                        // Semakin tinggi nilai, semakin baik
+                        $matriksR[$siswa->id][$kriteria->kode] = $maks > 0 ? ($xij / $maks) : 0;
                     } else {
-                        $normalized[$siswa->id][$k->kode] = $val > 0 ? ($min / $val) : 0;
+                        // Semakin rendah nilai (cost), semakin baik (misal: jumlah alpa)
+                        $matriksR[$siswa->id][$kriteria->kode] = $xij > 0 ? ($min / $xij) : 0;
                     }
                 }
             }
         }
 
-        return view('walikelas.ranking.index', compact('rankings', 'kelas', 'matrix', 'normalized', 'kriterias'));
+        // Kirim matriksX dan matriksR ke view agar bisa ditampilkan step-by-step
+        return view('walikelas.ranking.index', compact(
+            'rankings', 'kelas', 'kriterias',
+            'matriksX', 'matriksR'
+        ));
     }
 
+    /**
+     * Menjalankan perhitungan SPK metode SAW dan menyimpan hasilnya.
+     *
+     * Hasil ranking digunakan untuk menentukan siswa mana yang
+     * membutuhkan penanganan lebih lanjut (peringkat bawah = prioritas intervensi).
+     */
     public function generateRanking()
     {
-        $user = Auth::user();
-        $guru = $user->guru;
+        $user  = Auth::user();
+        $guru  = $user->guru;
         $kelas = Kelas::where('wali_id', $guru->id)->first();
 
         if (!$kelas) {
@@ -192,7 +249,7 @@ class WaliKelasController extends Controller
 
         $kriterias = Kriteria::all();
         if ($kriterias->isEmpty()) {
-            return redirect()->back()->with('error', 'Kriteria SPK belum diatur oleh Admin.');
+            return redirect()->back()->with('error', 'Kriteria SPK belum diatur oleh Admin. Silakan tambahkan kriteria terlebih dahulu.');
         }
 
         $siswas = Siswa::where('kelas_id', $kelas->id)->get();
@@ -201,87 +258,109 @@ class WaliKelasController extends Controller
         }
 
         $tahunAjaran = Setting::get('tahun_ajaran', '2025/2026');
-        $semester = Setting::get('semester', 'Ganjil');
+        $semester    = Setting::get('semester', 'Ganjil');
 
-        // VALIDASI: Cek ketersediaan data Nilai dan Kehadiran
-        $siswaIds = $siswas->pluck('id');
-        $hasNilai = Nilai::whereIn('siswa_id', $siswaIds)
+        // Validasi ketersediaan data sebelum menjalankan SAW
+        $siswaIds    = $siswas->pluck('id');
+        $adaNilai    = Nilai::whereIn('siswa_id', $siswaIds)
             ->where('tahun_ajaran', $tahunAjaran)
             ->where('semester', $semester)
             ->exists();
-        
-        $hasKehadiran = Kehadiran::whereIn('siswa_id', $siswaIds)->exists();
+        $adaKehadiran = Kehadiran::whereIn('siswa_id', $siswaIds)->exists();
 
-        if (!$hasNilai && !$hasKehadiran) {
-            return redirect()->back()->with('error', 'Gagal generate ranking: Data Nilai dan Kehadiran untuk kelas ini masih kosong. Silakan isi data absensi atau nilai terlebih dahulu.');
+        if (!$adaNilai && !$adaKehadiran) {
+            return redirect()->back()->with('error',
+                'Gagal menjalankan SPK: Data nilai dan kehadiran masih kosong. ' .
+                'Silakan lengkapi data terlebih dahulu.'
+            );
         }
 
-        // 1. Matriks Keputusan (X)
-        $matrix = [];
+        // =====================================================================
+        // LANGKAH 2: Bangun Matriks Keputusan (X)
+        // Xij = nilai alternatif ke-i pada kriteria ke-j
+        // =====================================================================
+        $matriksX = [];
         foreach ($siswas as $siswa) {
-            // C1: Nilai Akademik
+            // C1 — Nilai Akademik (benefit): rata-rata semua mapel semester ini
             $avgNilai = Nilai::where('siswa_id', $siswa->id)
                 ->where('tahun_ajaran', $tahunAjaran)
                 ->where('semester', $semester)
                 ->avg('nilai_angka') ?? 0;
 
-            // C2: Kehadiran
-            $totalHari = Kehadiran::where('siswa_id', $siswa->id)->count();
-            $hadir = Kehadiran::where('siswa_id', $siswa->id)->where('status', 'Hadir')->count();
-            $persenHadir = $totalHari > 0 ? ($hadir / $totalHari) * 100 : 0;
+            // C2 — Kehadiran (benefit): persentase hari hadir
+            $totalHari   = Kehadiran::where('siswa_id', $siswa->id)->count();
+            $jumlahHadir = Kehadiran::where('siswa_id', $siswa->id)->where('status', 'Hadir')->count();
+            $persenHadir = $totalHari > 0 ? ($jumlahHadir / $totalHari) * 100 : 0;
 
-            // C3: Perilaku
+            // C3 — Poin Perilaku (benefit): total poin jurnal perilaku
             $poinPerilaku = JurnalPerilaku::where('siswa_id', $siswa->id)->sum('poin');
 
-            $matrix[$siswa->id] = [
-                'C1' => (float)$avgNilai,
-                'C2' => (float)$persenHadir,
-                'C3' => (float)$poinPerilaku,
+            $matriksX[$siswa->id] = [
+                'C1' => (float) $avgNilai,
+                'C2' => (float) $persenHadir,
+                'C3' => (float) $poinPerilaku,
             ];
         }
 
-        // 2. Normalisasi (R)
-        $normalized = [];
-        foreach ($kriterias as $k) {
-            $values = array_column($matrix, $k->kode);
-            if (empty($values)) continue;
-            
-            $max = max($values);
-            $min = min($values);
+        // =====================================================================
+        // LANGKAH 3: Normalisasi Matriks (R)
+        // Benefit : Rij = Xij / max(Xj)   → nilai tertinggi = terbaik
+        // Cost    : Rij = min(Xj) / Xij   → nilai terendah  = terbaik
+        // =====================================================================
+        $matriksR = [];
+        foreach ($kriterias as $kriteria) {
+            $nilaiKolom = array_column($matriksX, $kriteria->kode);
+            if (empty($nilaiKolom)) continue;
+
+            $maks = max($nilaiKolom);
+            $min  = min($nilaiKolom);
 
             foreach ($siswas as $siswa) {
-                $val = $matrix[$siswa->id][$k->kode];
-                if ($k->jenis == 'benefit') {
-                    $normalized[$siswa->id][$k->kode] = $max > 0 ? ($val / $max) : 0;
+                $xij = $matriksX[$siswa->id][$kriteria->kode];
+
+                if ($kriteria->jenis === 'benefit') {
+                    $matriksR[$siswa->id][$kriteria->kode] = $maks > 0 ? ($xij / $maks) : 0;
                 } else {
-                    $normalized[$siswa->id][$k->kode] = $val > 0 ? ($min / $val) : 0;
+                    $matriksR[$siswa->id][$kriteria->kode] = $xij > 0 ? ($min / $xij) : 0;
                 }
             }
         }
 
-        // 3. Perhitungan Skor Akhir (V)
-        $scores = [];
+        // =====================================================================
+        // LANGKAH 4: Hitung Skor Preferensi (V) — Vektor Keputusan SAW
+        // Vi = Σ (Wj × Rij)
+        // Wj = bobot kriteria ke-j (dalam persen, dibagi 100)
+        // =====================================================================
+        $skorV = [];
         foreach ($siswas as $siswa) {
-            $score = 0;
-            foreach ($kriterias as $k) {
-                if (isset($normalized[$siswa->id][$k->kode])) {
-                    $score += $normalized[$siswa->id][$k->kode] * ($k->bobot / 100);
+            $vi = 0;
+            foreach ($kriterias as $kriteria) {
+                if (isset($matriksR[$siswa->id][$kriteria->kode])) {
+                    // Bobot disimpan sebagai persentase (mis. 40), dibagi 100 → 0.40
+                    $vi += $matriksR[$siswa->id][$kriteria->kode] * ($kriteria->bobot / 100);
                 }
             }
-            $scores[$siswa->id] = $score;
+            $skorV[$siswa->id] = $vi;
         }
 
-        // 4. Sorting & Simpan
-        arsort($scores);
-        
-        $rank = 1;
-        foreach ($scores as $siswaId => $finalScore) {
+        // =====================================================================
+        // LANGKAH 5: Ranking — Urutkan berdasarkan Vi tertinggi
+        // Siswa dengan Vi tertinggi = performa terbaik
+        // Siswa dengan Vi terendah  = prioritas penanganan/intervensi
+        // =====================================================================
+        arsort($skorV); // Descending: Vi terbesar → ranking 1
+
+        $ranking = 1;
+        foreach ($skorV as $siswaId => $vi) {
             SpkRanking::updateOrCreate(
                 ['siswa_id' => $siswaId, 'tahun_ajaran' => $tahunAjaran],
-                ['skor_spk' => $finalScore, 'ranking' => $rank++]
+                ['skor_spk' => round($vi, 6), 'ranking' => $ranking++]
             );
         }
 
-        return redirect()->back()->with('success', 'Ranking SPK berhasil diperbarui.');
+        return redirect()->back()->with('success',
+            'Ranking SPK (metode SAW) berhasil diperbarui. ' .
+            'Siswa dengan skor terendah membutuhkan perhatian lebih.'
+        );
     }
 }

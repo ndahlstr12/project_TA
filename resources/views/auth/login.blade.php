@@ -18,24 +18,25 @@
     body {
       font-family: 'Plus Jakarta Sans', sans-serif;
       min-height: 100vh;
-      display: flex;
       background: var(--gray-soft);
-      overflow-x: hidden;
+      display: flex;
     }
 
-    /* ── LEFT PANEL ── */
+    /* ── LEFT PANEL: hanya tampil di layar >= 768px ── */
     .left-panel {
-      display: none; /* Sembunyikan di HP secara default */
+      display: none;
       width: 42%;
       min-height: 100vh;
       background: linear-gradient(150deg, var(--navy-deep) 0%, var(--navy) 60%, #2a4080 100%);
       position: relative;
-      display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 3rem 2.5rem;
       overflow: hidden;
+    }
+    @media (min-width: 768px) {
+      .left-panel { display: flex; }
     }
     .left-panel::before {
       content: '';
@@ -72,10 +73,7 @@
       margin-bottom: 2rem;
       backdrop-filter: blur(6px);
       position: relative; z-index: 1;
-      transition: transform .3s;
     }
-    .logo-box:hover { transform: scale(1.05); }
-    .logo-box svg { opacity: .45; }
     .school-name {
       font-family: 'Merriweather', serif;
       font-size: 1.45rem; color: #fff;
@@ -100,21 +98,26 @@
 
     /* ── RIGHT PANEL ── */
     .right-panel {
-      flex: 1; display: flex; align-items: center; justify-content: center;
-      padding: 2rem; position: relative; background: var(--cream);
-    }
-    .right-panel::before {
-      content: ''; position: absolute;
-      width: 500px; height: 500px; border-radius: 50%;
-      background: radial-gradient(circle, rgba(26,44,91,.05) 0%, transparent 70%);
-      top: -100px; right: -100px; pointer-events: none;
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.25rem;
+      min-height: 100vh;
+      background: var(--cream);
     }
     .form-card {
-      width: 100%; max-width: 420px; background: #fff;
-      border-radius: 24px; padding: 2.8rem 2.5rem;
+      width: 100%;
+      max-width: 420px;
+      background: #fff;
+      border-radius: 24px;
+      padding: 2.5rem 2rem;
       box-shadow: 0 8px 40px rgba(26,44,91,.1), 0 1px 4px rgba(26,44,91,.06);
-      position: relative; z-index: 1;
       animation: slideUp .55s cubic-bezier(.22,1,.36,1) both;
+    }
+    @media (min-width: 768px) {
+      .right-panel { padding: 2rem; }
+      .form-card { padding: 2.8rem 2.5rem; }
     }
     @keyframes slideUp {
       from { opacity:0; transform: translateY(24px); }
@@ -156,18 +159,6 @@
       padding: 0; transition: color .2s; display: flex; align-items: center;
     }
     .toggle-pass:hover { color: var(--navy); }
-
-    .role-label { font-size: .78rem; font-weight: 600; color: #8a93a8; text-transform: uppercase; letter-spacing: .08em; margin-bottom: .6rem; }
-    .role-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: .55rem; margin-bottom: 1.4rem; }
-    .role-btn {
-      padding: .55rem .3rem; border-radius: 10px;
-      border: 1.5px solid #e2e6ef; background: var(--gray-soft);
-      font-size: .75rem; font-weight: 600; color: #8a93a8;
-      cursor: pointer; text-align: center; transition: all .18s;
-    }
-    .role-btn:hover { border-color: var(--navy); color: var(--navy); }
-    .role-btn.active { border-color: var(--navy); background: var(--navy); color: #fff; }
-
     .btn-login {
       width: 100%; padding: .9rem;
       background: linear-gradient(135deg, var(--navy) 0%, #2a4080 100%);
@@ -219,9 +210,7 @@
     }
     .err-msg.show { display: flex; align-items: center; gap: .5rem; }
 
-    /* ══════════════════════════════════════
-       MODAL
-    ══════════════════════════════════════ */
+    /* ── MODAL ── */
     .modal-overlay {
       position: fixed; inset: 0; z-index: 300;
       display: flex; align-items: center; justify-content: center; padding: 1.5rem;
@@ -229,37 +218,25 @@
       transition: opacity .35s ease, visibility .35s ease;
     }
     .modal-overlay.open { visibility: visible; opacity: 1; }
-
     .modal-backdrop {
       position: absolute; inset: 0;
       background: rgba(8,16,38,.7);
       backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
     }
-
     .modal-card {
       position: relative; z-index: 10;
       width: 100%; max-width: 460px;
       background: #fff; border-radius: 28px; overflow: hidden;
-      box-shadow: 0 40px 100px rgba(8,16,38,.4), 0 2px 8px rgba(8,16,38,.12);
+      box-shadow: 0 40px 100px rgba(8,16,38,.4);
       transform: translateY(36px) scale(.96);
       opacity: 0;
       transition: transform .45s cubic-bezier(.22,1,.36,1), opacity .45s ease;
     }
     .modal-overlay.open .modal-card { transform: translateY(0) scale(1); opacity: 1; }
-
-    /* modal header */
     .modal-header {
       background: linear-gradient(140deg, var(--navy-deep) 0%, var(--navy) 55%, #2a4080 100%);
-      padding: 2.2rem 2.5rem 1.8rem;
+      padding: 2rem 2rem 1.6rem;
       position: relative; overflow: hidden; text-align: center;
-    }
-    .modal-header::after {
-      content: '';
-      position: absolute;
-      width: 340px; height: 340px; border-radius: 50%;
-      border: 2px solid rgba(232,160,32,.12);
-      top: -140px; right: -80px;
     }
     .mh-dots {
       position: absolute; inset: 0;
@@ -271,149 +248,49 @@
       width: 32px; height: 32px; border-radius: 8px;
       background: rgba(255,255,255,.12); border: none;
       cursor: pointer; display: flex; align-items: center; justify-content: center;
-      color: rgba(255,255,255,.7); transition: background .2s, color .2s; z-index: 2;
+      color: rgba(255,255,255,.7); z-index: 2;
     }
-    .modal-close:hover { background: rgba(255,255,255,.22); color: #fff; }
-
     .modal-icon-wrap {
       width: 72px; height: 72px;
       background: rgba(255,255,255,.1);
       border: 2px solid rgba(255,255,255,.18);
       border-radius: 20px;
       display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 1.2rem; backdrop-filter: blur(6px);
-      position: relative; z-index: 1;
-      transition: transform .3s;
+      margin: 0 auto 1.2rem; position: relative; z-index: 1;
     }
-
-    /* step dots */
-    .step-dots { display: flex; justify-content: center; gap: .45rem; position: relative; z-index:1; }
-    .sdot {
-      height: 4px; border-radius: 2px;
-      background: rgba(255,255,255,.28);
-      transition: width .35s cubic-bezier(.22,1,.36,1), background .3s;
-    }
-    .sdot.active { background: var(--gold-light); }
-    .sdot.done   { background: rgba(255,255,255,.55); }
-
-    /* modal body */
-    .modal-body { padding: 2rem 2.5rem 2.5rem; }
-
-    .step-panel { display: none; }
-    .step-panel.active {
-      display: block;
-      animation: stepIn .32s cubic-bezier(.22,1,.36,1) both;
-    }
-    @keyframes stepIn {
-      from { opacity:0; transform: translateX(14px); }
-      to   { opacity:1; transform: translateX(0); }
-    }
-
+    .modal-body { padding: 2rem 2rem 2.5rem; }
     .mstep-title {
       font-family: 'Merriweather', serif;
       font-size: 1.2rem; color: var(--navy-deep);
       text-align: center; margin-bottom: .4rem;
     }
     .mstep-desc { font-size: .8rem; color: #8a93a8; text-align: center; line-height: 1.65; margin-bottom: 1.6rem; }
-
     .mlabel {
       display: block; font-size: .73rem; font-weight: 700; color: #8a93a8;
       text-transform: uppercase; letter-spacing: .08em; margin-bottom: .4rem;
     }
-
-    /* two buttons row */
     .mactions { display: flex; gap: .75rem; margin-top: 1.5rem; }
     .btn-mcancel {
       flex: 1; padding: .85rem;
       border: 1.5px solid #e2e6ef; border-radius: 12px; background: transparent;
       font-family: 'Plus Jakarta Sans', sans-serif; font-size: .85rem; font-weight: 600;
-      color: #8a93a8; cursor: pointer; transition: all .18s;
+      color: #8a93a8; cursor: pointer;
     }
-    .btn-mcancel:hover { border-color: var(--navy); color: var(--navy); }
     .btn-mprimary {
       flex: 1.6; padding: .85rem;
       background: linear-gradient(135deg, var(--navy) 0%, #2a4080 100%);
       color: #fff; border: none; border-radius: 12px;
       font-family: 'Plus Jakarta Sans', sans-serif; font-size: .88rem; font-weight: 700;
-      cursor: pointer; position: relative; overflow: hidden;
-      transition: transform .15s, box-shadow .15s;
-      box-shadow: 0 4px 14px rgba(26,44,91,.3);
-      display: flex; align-items: center; justify-content: center; gap: .45rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; gap: .45rem;
     }
-    .btn-mprimary:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(26,44,91,.35); }
-    .btn-mprimary:active { transform: translateY(0); }
-    .btn-mprimary.full { flex: 1; }
-
-    /* OTP */
-    .otp-row { display: flex; gap: .55rem; justify-content: center; margin-bottom: 1.2rem; }
-    .otp-box {
-      width: 50px; height: 58px;
-      border: 1.5px solid #e2e6ef; border-radius: 12px;
-      text-align: center; font-size: 1.4rem; font-weight: 700;
-      color: var(--navy-deep); background: var(--gray-soft); outline: none;
-      transition: border-color .2s, box-shadow .2s, background .2s;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      caret-color: transparent;
-    }
-    .otp-box:focus { border-color: var(--navy); background: #fff; box-shadow: 0 0 0 3px rgba(26,44,91,.1); }
-    .otp-box.filled { border-color: var(--navy); background: rgba(26,44,91,.04); }
-
-    .hint-otp { font-size: .75rem; color: #b0b8cc; text-align: center; margin-top: -.4rem; margin-bottom: 1rem; }
-    .hint-otp a { color: var(--navy); font-weight: 700; cursor: pointer; text-decoration: none; }
-    .hint-otp a:hover { text-decoration: underline; }
-
-    /* success */
-    .success-ring {
-      width: 88px; height: 88px; border-radius: 50%;
-      background: linear-gradient(135deg, #059669, #34d399);
-      display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 1.4rem;
-      box-shadow: 0 10px 30px rgba(5,150,105,.28);
-      animation: popIn .5s cubic-bezier(.22,1,.36,1) both;
-    }
-    @keyframes popIn {
-      from { transform: scale(0) rotate(-20deg); opacity: 0; }
-      to   { transform: scale(1) rotate(0deg); opacity: 1; }
-    }
-
     .mfooter { text-align: center; font-size: .72rem; color: #b0b8cc; margin-top: 1.4rem; }
     .mfooter a { color: var(--navy); font-weight: 700; text-decoration: none; }
-    .mfooter a:hover { text-decoration: underline; }
-
-    /* input error highlight */
     input.input-error { border-color: #dc2626 !important; box-shadow: 0 0 0 3px rgba(220,38,38,.1) !important; }
-
-    /* ── RESPONSIVE ── */
-    /* Tablet ke atas: tampilkan panel kiri */
-    @media (min-width: 768px) {
-      .left-panel { display: flex; }
-      body { overflow: hidden; }
-    }
-
-    /* HP: form card full screen, padding lebih kecil */
-    @media (max-width: 767px) {
-      .right-panel {
-        width: 100%;
-        min-height: 100vh;
-        padding: 1.5rem 1rem;
-        align-items: flex-start;
-        padding-top: 2.5rem;
-      }
-      .form-card {
-        padding: 2rem 1.5rem;
-        border-radius: 20px;
-        max-width: 100%;
-      }
-      .form-title { font-size: 1.4rem; }
-      .otp-box { width: 42px; height: 50px; font-size: 1.2rem; }
-      .modal-body { padding: 1.5rem 1.5rem 2rem; }
-      .modal-header { padding: 1.8rem 1.5rem 1.4rem; }
-    }
   </style>
 </head>
 <body>
 
-  <!-- ═══ LEFT ═══ -->
+  <!-- ═══ LEFT (hanya tampil di tablet/laptop) ═══ -->
   <div class="left-panel">
     <div class="dot-grid"></div>
     <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;width:100%;max-width:320px;">
@@ -438,7 +315,7 @@
     </div>
   </div>
 
-  <!-- ═══ RIGHT ═══ -->
+  <!-- ═══ RIGHT (form login, full width di HP) ═══ -->
   <div class="right-panel">
     <div class="form-card">
       <div class="form-icon">
@@ -488,40 +365,31 @@
       </form>
 
       <div class="divider"><hr/><span>atau</span><hr/></div>
-
       <button class="btn-forgot" id="openResetModal" type="button">🔑 Lupa Password?</button>
       <div class="footer-note">Tahun Pelajaran <span>2025/2026</span> · Semester Genap</div>
     </div>
   </div>
 
-  <!-- ═══════════════════════════════════════════
-       MODAL — RESET PASSWORD (SIMPLIFIED)
-  ═══════════════════════════════════════════ -->
+  <!-- ═══ MODAL RESET PASSWORD ═══ -->
   <div class="modal-overlay" id="resetModal">
     <div class="modal-backdrop" id="mBackdrop"></div>
-
     <div class="modal-card">
-      <!-- Header -->
       <div class="modal-header">
         <div class="mh-dots"></div>
         <button class="modal-close" id="mClose">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
-
         <div class="modal-icon-wrap">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/>
           </svg>
         </div>
       </div>
-
-      <!-- Body -->
       <div class="modal-body">
         <form action="{{ route('forgot-password') }}" method="POST">
           @csrf
           <div class="mstep-title">Lupa Kata Sandi?</div>
-          <div class="mstep-desc">Masukkan NISN (siswa) atau NIP (guru/admin) Anda. Kami akan mengirimkan permintaan reset kata sandi ke Admin Sekolah.</div>
-
+          <div class="mstep-desc">Masukkan NISN (siswa) atau NIP (guru/admin) Anda. Permintaan reset akan dikirim ke Admin Sekolah.</div>
           <label class="mlabel">NISN / NIP</label>
           <div class="field-wrap">
             <span class="field-icon">
@@ -529,7 +397,6 @@
             </span>
             <input type="text" name="username" placeholder="Masukkan NISN / NIP Anda" required/>
           </div>
-
           <div class="mactions">
             <button type="button" class="btn-mcancel" id="s1Cancel">Batal</button>
             <button type="submit" class="btn-mprimary">
@@ -544,18 +411,13 @@
   </div>
 
   @if(session('success'))
-    <script>
-      alert("{{ session('success') }}");
-    </script>
+    <script>alert("{{ session('success') }}");</script>
   @endif
   @if($errors->has('username'))
-    <script>
-      alert("{{ $errors->first('username') }}");
-    </script>
+    <script>alert("{{ $errors->first('username') }}");</script>
   @endif
 
 <script>
-  /* ── Toggle password ── */
   const pIn = document.getElementById('password');
   const eIc = document.getElementById('eyeIcon');
   document.getElementById('togglePass').addEventListener('click', () => {
@@ -566,7 +428,6 @@
       : `<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>`;
   });
 
-  /* ── Login button ── */
   document.getElementById('loginBtn').addEventListener('click', function(e) {
     const btn = this;
     const rect = btn.getBoundingClientRect();
@@ -576,33 +437,23 @@
     r.style.cssText = `width:${sz}px;height:${sz}px;left:${e.clientX-rect.left-sz/2}px;top:${e.clientY-rect.top-sz/2}px`;
     btn.appendChild(r);
     setTimeout(() => r.remove(), 600);
-
-    // Animasi loading sebentar sebelum submit
     const user = document.getElementById('username').value.trim();
     const pass = pIn.value;
     if (user && pass) {
       btn.classList.add('loading');
-      // Form akan terkirim secara otomatis karena type="submit"
     } else {
       e.preventDefault();
-      const err  = document.getElementById('errMsg');
+      const err = document.getElementById('errMsg');
       document.getElementById('errText').textContent = 'Username dan password tidak boleh kosong.';
       err.classList.add('show');
-      bumpCard();
+      const c = document.querySelector('.form-card');
+      c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake');
     }
   });
-  document.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginBtn').click(); });
-  function bumpCard() {
-    const c = document.querySelector('.form-card');
-    c.classList.remove('shake'); void c.offsetWidth; c.classList.add('shake');
-  }
 
-  /* ════════════ MODAL ════════════ */
   const modal = document.getElementById('resetModal');
-
   function openModal()  { modal.classList.add('open'); document.body.style.overflow = 'hidden'; }
   function closeModal() { modal.classList.remove('open'); document.body.style.overflow = ''; }
-
   document.getElementById('openResetModal').addEventListener('click', openModal);
   document.getElementById('mClose').addEventListener('click', closeModal);
   document.getElementById('mBackdrop').addEventListener('click', closeModal);

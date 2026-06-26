@@ -51,14 +51,10 @@
                     </p>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4 pt-4">
+                <div class="pt-4">
                     <a href="{{ route('parent.raport.show', $raport->id) }}" class="w-full py-4 bg-indigo-600 text-white text-[10px] font-bold rounded-2xl uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-xl shadow-indigo-500/20">
                         <i data-lucide="eye" class="w-4 h-4"></i>
                         Lihat Web
-                    </a>
-                    <a href="{{ route('walikelas.raport.export-pdf', $raport->siswa_id) }}" class="w-full py-4 bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[10px] font-bold rounded-2xl uppercase tracking-widest flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-xl shadow-black/10">
-                        <i data-lucide="download" class="w-4 h-4"></i>
-                        PDF
                     </a>
                 </div>
             </div>

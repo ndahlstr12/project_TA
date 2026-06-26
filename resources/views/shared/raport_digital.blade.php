@@ -29,7 +29,7 @@
                 }
             @endphp
             
-            @if($role !== 'siswa')
+            @if($role === 'walikelas' || $role === 'guru')
             <a href="{{ $exportRoute }}" class="px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all flex items-center gap-2">
                 <i class="ti ti-printer"></i> Cetak PDF
             </a>
